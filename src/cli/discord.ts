@@ -31,6 +31,7 @@ export async function getBotUser(botToken: string) {
 		headers: { Authorization: `Bot ${botToken}` },
 	});
 	if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
+
 	return (await res.json()) as { id: string };
 }
 
@@ -42,9 +43,13 @@ export async function listAppEmojis(
 		`https://discord.com/api/v10/applications/${appId}/emojis`,
 		{ headers: { Authorization: `Bot ${botToken}` } }
 	);
+
 	if (!res.ok) throw new Error(`listAppEmojis failed: ${res.status}`);
+
 	const json = await res.json();
+
 	const items = Array.isArray(json?.items) ? json.items : [];
+
 	return items.map((e: any) => ({
 		id: String(e.id),
 		name: String(e.name),
@@ -61,6 +66,7 @@ export async function deleteAppEmoji(
 		`https://discord.com/api/v10/applications/${appId}/emojis/${emojiId}`,
 		{ method: "DELETE", headers: authHeaders(botToken) }
 	);
+
 	if (!res.ok)
 		throw new Error(`deleteAppEmoji ${emojiId} failed: ${res.status}`);
 }
@@ -87,6 +93,7 @@ export async function uploadAppEmoji(
 	);
 
 	const json = await res.json().catch(() => ({}));
+
 	if (!res.ok || !json?.id) {
 		throw new Error(
 			`uploadAppEmoji ${name} failed: ${res.status} ${JSON.stringify(json)}`

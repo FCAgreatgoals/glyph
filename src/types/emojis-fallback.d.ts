@@ -1,7 +1,7 @@
 declare module "glyph/emojis" {
   export type Emojis = string;
   export type EmojisRecord = Record<
-    string,
+    Emojis,
     { id: string; name: string; identifier: string }
   >;
 }

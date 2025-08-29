@@ -36,7 +36,11 @@ export async function scanLocalEmojis(cfg: GlyphConfig): Promise<string[]> {
 	return [...out].sort((a, b) => a.localeCompare(b));
 }
 
-export type LocalEmojiFile = { name: string; filePath: string; ext: string };
+export type LocalEmojiFile = {
+	name: string;
+	filePath: string;
+	ext: string;
+};
 
 export async function listLocalEmojiFiles(
 	cfg: GlyphConfig
@@ -89,11 +93,13 @@ export async function writeIndexFiles(
 		`  export type Emojis = ${list.length ? list.map((e) => `'${e.name}'`).join(" | ") : "never"};\n` +
 		`  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
 		`}\n`;
+
 	await writeFile(
 		resolve(dir, "list.json"),
 		JSON.stringify(list, null, 2),
 		"utf8"
 	);
+
 	await writeFile(resolve(dir, "emojis.d.ts"), dts + "\n", "utf8");
 }
 

@@ -29,10 +29,16 @@ export const DEFAULT_CONFIG: GlyphConfig = {
 
 export async function loadConfig(): Promise<GlyphConfig> {
 	const configPath = resolve("glyph.config.js");
+
 	if (existsSync(configPath)) {
 		const config = (await import(configPath))
 			.default as Partial<GlyphConfig>;
-		return { ...DEFAULT_CONFIG, ...config };
+
+		return {
+			...DEFAULT_CONFIG,
+			...config,
+		};
 	}
+
 	return DEFAULT_CONFIG;
 }
