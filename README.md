@@ -117,12 +117,13 @@ console.log(`Number of emojis: ${Glyph.size()}`)
 import { Client, GatewayIntentBits } from "discord.js"
 import Glyph from "@fca.gg/glyph"
 
+Glyph.init()
+
 const client = new Client({ 
     intents: [GatewayIntentBits.Guilds] 
 })
 
-client.once("ready", async () => {
-    await Glyph.init()
+client.once("ready", () => {
     console.log("Bot ready!")
 })
 
