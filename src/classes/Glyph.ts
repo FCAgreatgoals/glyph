@@ -12,7 +12,7 @@ export class Glyph {
 		this.entries = new Map(list.map((e: any) => [e.name, e]));
 	}
 
-	static async init(options: GlyphInitOptions = {
+	static init(options: GlyphInitOptions = {
 		emojisDir: "./emojis"
 	}) {
 		if (Glyph.instance) throw new Error("Glyph already Initialized");
