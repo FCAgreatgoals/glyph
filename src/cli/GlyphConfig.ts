@@ -27,8 +27,10 @@ export const DEFAULT_CONFIG: GlyphConfig = {
 	botToken: undefined,
 };
 
+export const CONFIG_FILE = 'glyph.config.js'
+
 export async function loadConfig(): Promise<GlyphConfig> {
-	const configPath = resolve("glyph.config.js");
+	const configPath = resolve(CONFIG_FILE);
 
 	if (existsSync(configPath)) {
 		const config = (await import(configPath))
