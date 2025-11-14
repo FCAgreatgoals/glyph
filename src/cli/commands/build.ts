@@ -54,105 +54,94 @@ export function runBuild(app: Command) {
 		.action(async () => {
 			const cfg = await loadConfig();
 
-			console.log("glyph build");
-			console.log("emojisDir:", cfg.emojisDir);
-			console.log("fileIndex:", cfg.fileIndex);
-			console.log("botToken:", cfg.botToken ? "(loaded)" : "(missing)");
-
-			const localNames = await scanLocalEmojis(cfg);
-			console.log(
-				`local: ${localNames.length}${localNames.length ? " → " + localNames.join(", ") : ""}`
-			);
+			console.log("━━━ 🧱 glyph build ━━━━━━━━━━━━━━━━━━━━━━━");
+			console.log(`📁 Emojis directory : ${cfg.emojisDir}`);
+			console.log(`📄 File index       : ${cfg.fileIndex ? "Enabled" : "Disabled"}`);
+			console.log("\n");
 
 			if (!cfg.botToken) {
 				console.error("❌ Missing bot token. Aborting.");
 				return;
 			}
 
+			const localNames = await scanLocalEmojis(cfg);
+
 			const started = Date.now();
 			try {
 				const me = await getBotUser(cfg.botToken);
 				const remote = await listAppEmojis(cfg.botToken, me.id);
 				const remoteNames = remote
-					.map((e) => e.name)
+					.map(e => e.name)
 					.sort((a, b) => a.localeCompare(b));
 
-				const { toUpload, toDelete, kept } = diffEmojis(
-					localNames,
-					remoteNames
-				);
-
-				console.log(
-					`remote: ${remoteNames.length}${remoteNames.length ? " → " + remoteNames.join(", ") : ""}`
-				);
-				console.log("plan:");
-				console.log(
-					"  toUpload:",
-					toUpload.length,
-					toUpload.join(", ") || "(none)"
-				);
-				console.log(
-					"  toDelete:",
-					toDelete.length,
-					toDelete.join(", ") || "(none)"
-				);
-				console.log("  kept   :", kept.length);
+				const { toUpload, toDelete, kept } = diffEmojis(localNames, remoteNames);
 
 				// DELETE
-				const remoteByName = new Map(remote.map((r) => [r.name, r]));
-				let deleted = 0,
-					uploaded = 0,
-					failed = 0;
+				const remoteByName = new Map(remote.map(r => [r.name, r]));
+				let deleted = 0, uploaded = 0, failed = 0;
 
 				for (const name of toDelete) {
 					const r = remoteByName.get(name);
 					if (!r) continue;
 					try {
-						console.log(`🗑 DELETE ${name} … `);
+						console.log(`🗑  Removing "${name}"…`);
 						await deleteAppEmoji(cfg.botToken, me.id, r.id);
-						console.log("✅");
+						console.log("    → Removed ✓");
 						deleted++;
 					} catch (err: any) {
-						console.log(`❌ ${err?.message ?? err}`);
+						console.log(`    → Failed ✗ ${err?.message ?? err}`);
 						failed++;
 					}
 				}
 
 				// UPLOAD
 				const localFiles = await listLocalEmojiFiles(cfg);
-				const filesByName = new Map(localFiles.map((f) => [f.name, f]));
+				const filesByName = new Map(localFiles.map(f => [f.name, f]));
 
 				for (const name of toUpload) {
 					const f = filesByName.get(name);
 					if (!f) continue;
 					try {
-						console.log(`📤 UPLOAD ${name} … `);
+						console.log(`📤 Uploading "${name}"…`);
 						const b64 = await fileToBase64(f.filePath);
 						const mime = guessMime(f.ext);
 
-						await uploadAppEmoji(cfg.botToken, me.id, name, b64,mime);
-						console.log("✅");
+						await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime);
+						console.log("    → Uploaded ✓");
 						uploaded++;
 					} catch (err: any) {
-						console.log(`❌ ${err?.message ?? err}`);
+						console.log(`    → Failed ✗ ${err?.message ?? err}`);
 						failed++;
 					}
 				}
 
-				// Final fetch + index generation
-				const finalRemote = await listAppEmojis(cfg.botToken, me.id);
-				if (cfg.fileIndex) {
-					await writeIndexFiles(finalRemote, cfg);
-					console.log("📝 wrote list.json & emojis.d.ts");
+				if (uploaded > 0 || deleted > 0) {
+					console.log("\n");
 				}
 
+				// Index generation
+				const finalRemote = await listAppEmojis(cfg.botToken, me.id);
+				if (cfg.fileIndex) {
+					console.log("📝 Updating index files…");
+					await writeIndexFiles(finalRemote, cfg);
+					console.log("    → list.json & emojis.d.ts updated ✓\n");
+				}
+
+				// SUMMARY
 				const dur = ((Date.now() - started) / 1000).toFixed(2);
-				console.log(
-					`Done in ${dur}s — kept:${kept.length}, uploaded:${uploaded}, deleted:${deleted}, failed:${failed}`
-				);
+
+				console.log("✅ Sync complete");
+				console.log(`   ⏱ Duration  : ${dur}s`);
+				console.log(`   ↻ Kept      : ${kept.length}`);
+				console.log(`   ➕ Uploaded : ${uploaded}`);
+				console.log(`   ➖ Deleted  : ${deleted}`);
+				console.log(`   ✗ Failed    : ${failed}`);
+				console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
 				if (failed > 0) process.exitCode = 1;
+
 			} catch (err: any) {
-				console.error("❌ build failed:", err?.message ?? err);
+				console.error("❌ Build failed:", err?.message ?? err);
 			}
 		});
 }
