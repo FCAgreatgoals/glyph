@@ -67,6 +67,22 @@ export default config
                 }
             }
 
+            const tsconfigPath = path.join(process.cwd(), 'tsconfig.json')
+
+            if (fs.existsSync(tsconfigPath)) {
+                const tsconfigContent = fs.readFileSync(tsconfigPath, 'utf8')
+                const tsconfig = JSON.parse(tsconfigContent)
+
+                if (!tsconfig.include) tsconfig.include = []
+
+                const emojiDtsPath = 'emojis/emojis.d.ts'
+                if (!tsconfig.include.includes(emojiDtsPath)) {
+                    tsconfig.include.push(emojiDtsPath)
+                    fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 4))
+                    console.log(`Added "${emojiDtsPath}" to tsconfig.json include`)
+                }
+            }
+
             console.log('Setup complete.')
         })
 }
