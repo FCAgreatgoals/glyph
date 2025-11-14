@@ -12,6 +12,7 @@ coverage/
 .env
 .env.local
 .env.*.local
+glyph.config.js
 
 # Editor files
 .vscode/
