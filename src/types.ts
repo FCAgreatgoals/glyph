@@ -17,8 +17,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export type RemoteEmoji = { id: string; name: string; animated?: boolean };
-export type GlyphEntry = { id: string; name: string; identifier: string };
+export type RemoteEmoji = {
+    id: string;
+    name: string;
+    animated?: boolean;
+};
+
+export type GlyphEntry = {
+    id: string;
+    name: string;
+    identifier: string;
+};
+
 export interface GlyphConfig {
     emojisDir: string;
     fileIndex: boolean;
