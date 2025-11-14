@@ -33,7 +33,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const config = {
-    emojisDir: "./emojis",      // Folder containing your emojis
+    emojisDir: "./emojis",       // Folder containing your emojis
     fileIndex: true,             // Automatic index generation
     botToken: process.env.TOKEN  // Your Discord bot token
 }
@@ -95,11 +95,11 @@ await Glyph.init({
 // Get a specific emoji
 const emoji = Glyph.get("happy")
 console.log(emoji)
-// { id: "123456789", name: "happy", identifier: "<:happy:123456789>" }
+// { id: "794367836033515531", name: "happy", identifier: "<:happy:794367836033515531>" }
 
 // Get only the identifier (Discord format)
 const identifier = Glyph.identifier("happy")
-console.log(identifier) // "<:happy:123456789>"
+console.log(identifier) // "<:happy:794367836033515531>"
 
 // Check if an emoji exists
 if (Glyph.has("party")) {
@@ -179,14 +179,14 @@ Glyph supports the following image formats:
 ```json
 [
   {
-    "id": "123456789",
+    "id": "794367836033515531",
     "name": "happy",
-    "identifier": "<:happy:123456789>"
+    "identifier": "<:happy:794367836033515531>"
   },
   {
-    "id": "987654321",
+    "id": "917871943041048636",
     "name": "party",
-    "identifier": "<a:party:987654321>"
+    "identifier": "<a:party:917871943041048636>"
   }
 ]
 ```
