@@ -29,12 +29,11 @@ export const DEFAULT_CONFIG: GlyphConfig = {
 	botToken: undefined,
 }
 
-export async function loadConfig(): Promise<GlyphConfig> {
+export function loadConfig(): GlyphConfig {
 	const configPath = resolve(CONFIG_FILE);
 
 	if (existsSync(configPath)) {
-		const config = (await import(configPath))
-			.default as Partial<GlyphConfig>;
+		const config = require(configPath) as Partial<GlyphConfig>;
 
 		return {
 			...DEFAULT_CONFIG,

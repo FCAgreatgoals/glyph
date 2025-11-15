@@ -2,9 +2,8 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { GlyphEntry } from "../types";
 import type { Emojis } from "glyph/emojis";
-import { DEFAULT_EMOJIS_DIR, LIST_FILE } from "../constants";
-
-export type GlyphInitOptions = Partial<{ emojisDir: string }>;
+import { LIST_FILE } from "../constants";
+import { loadConfig } from "../cli/GlyphConfig";
 
 export class Glyph {
 
@@ -15,18 +14,13 @@ export class Glyph {
 		this.entries = new Map(list.map(e => [e.name, e]));
 	}
 
-	static init(options: GlyphInitOptions = {
-		emojisDir: DEFAULT_EMOJIS_DIR
-	}) {
+	public static init() {
 		if (Glyph.instance) throw new Error("Glyph already Initialized");
 
-		if (!options.emojisDir)
-			options.emojisDir = DEFAULT_EMOJIS_DIR;
-
-		const dir = options?.emojisDir;
+		const config = loadConfig()
 
 		const list = JSON.parse(
-			readFileSync(resolve(dir, LIST_FILE), "utf-8")
+			readFileSync(resolve(config.emojisDir, LIST_FILE), "utf-8")
 		) as Array<GlyphEntry>;
 
 		Glyph.instance = new Glyph(list);

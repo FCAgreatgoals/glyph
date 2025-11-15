@@ -42,7 +42,7 @@ export function registerBuildCommand(app: Command) {
 	app.command("build")
 		.description("Synchronize emojis and generate indexes")
 		.action(async () => {
-			const cfg = await loadConfig();
+			const cfg = loadConfig();
 
 			console.log("━━━ 🧱 glyph build ━━━━━━━━━━━━━━━━━━━━━━━");
 			console.log(`📁 Emojis directory : ${cfg.emojisDir}`);
