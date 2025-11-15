@@ -20,6 +20,7 @@
 import { existsSync } from "fs";
 import { resolve } from "path";
 import type { GlyphConfig } from "../types";
+import dotenv from "dotenv";
 
 export const DEFAULT_CONFIG: GlyphConfig = {
 	emojisDir: "./emojis",
@@ -42,5 +43,11 @@ export async function loadConfig(): Promise<GlyphConfig> {
 		};
 	}
 
-	return DEFAULT_CONFIG;
+	dotenv.config()
+
+	return {
+		...DEFAULT_CONFIG,
+		...(process.env.EMOJIS_DIR ? { emojisDir: process.env.EMOJIS_DIR } : {}),
+		...(process.env.TOKEN ? { botToken: process.env.TOKEN } : {})
+	}
 }
