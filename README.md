@@ -20,11 +20,21 @@ pnpm glyph setup
 
 This command will:
 - Create the `emojis/` folder for your emoji files
-- Generate a `glyph.config.js` file with the default configuration
+- (Optional) Generate a `glyph.config.js` file with the default configuration
 - Add `emojis/list.json` to `.gitignore`
 - Add `emojis/emojis.d.ts` to `tsconfig.json`
 
 ### 2. Configuration
+
+**Default Environment Variables:**
+
+By default, the application will use the following environment variables if not explicitly configured:
+- `TOKEN` - for the Discord bot token
+- `EMOJIS_DIR` - for the emojis directory path
+
+**Manual Configuration:**
+
+You can also manually create a `glyph.config.js` file with your configuration.
 
 The generated `glyph.config.js` file looks like this:
 
@@ -201,18 +211,6 @@ declare module "glyph/emojis" {
     name: string; 
     identifier: string 
   }>;
-}
-```
-
-## 🔧 Advanced Configuration
-
-### `GlyphConfig` Options
-
-```typescript
-interface GlyphConfig {
-    emojisDir: string    // Path to emojis folder
-    fileIndex: boolean   // Generate index files
-    botToken?: string    // Discord bot token
 }
 ```
 
