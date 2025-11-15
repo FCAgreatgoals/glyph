@@ -24,7 +24,7 @@ import { loadConfig } from '../GlyphConfig'
 import { Command } from 'commander'
 import { CONFIG_FILE, GITIGNORE_ENTRY, TYPES_FILE } from '../../constants'
 
-export function runSetup(app: Command) {
+export function registerSetupCommand(app: Command) {
     app.command("setup")
         .description("Setup default config for glyph")
         .action(async () => {

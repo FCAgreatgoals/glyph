@@ -38,7 +38,7 @@ function guessMime(ext: string): string {
 	return MIME_TYPES[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
 }
 
-export function runBuild(app: Command) {
+export function registerBuildCommand(app: Command) {
 	app.command("build")
 		.description("Synchronize emojis and generate indexes")
 		.action(async () => {
