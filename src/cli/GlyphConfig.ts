@@ -19,7 +19,6 @@
 
 import { existsSync } from "fs";
 import { resolve } from "path";
-import dotenv from "dotenv";
 import type { GlyphConfig } from "../types";
 import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
 
@@ -42,8 +41,6 @@ export async function loadConfig(): Promise<GlyphConfig> {
 			...config,
 		};
 	}
-
-	dotenv.config()
 
 	return {
 		...DEFAULT_CONFIG,
