@@ -20,8 +20,7 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"glyph": "node ./lib/cli/bin/glyph.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"glyph": "node ./lib/cli/bin/glyph.js"
 	},
 	"repository": {
 		"type": "git",
