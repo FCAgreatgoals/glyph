@@ -4,11 +4,23 @@
 	"version": "1.0.0",
 	"description": "App emojis manager for Discord Bots",
 	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./lib/index.js",
+			"types": "./lib/index.d.ts"
+		}
+	},
+	"bin": {
+		"glyph": "lib/cli/bin/glyph.js"
+	},
+	"files": [
+		"lib"
+	],
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",
-		"start": "node lib/index.js",
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"glyph": "node ./lib/cli/bin/glyph.js"
 	},
 	"repository": {
 		"type": "git",
@@ -19,9 +31,15 @@
 	"devDependencies": {
 		"@stylistic/eslint-plugin": "^5.2.3",
 		"@types/node": "^20.0.0",
+		"@types/prompts": "^2.4.9",
 		"eslint": "^9.33.0",
 		"prettier": "^3.6.2",
 		"typescript": "^5.9.2",
 		"typescript-eslint": "^8.39.0"
+	},
+	"dependencies": {
+		"commander": "^14.0.0",
+		"dotenv": "^17.2.3",
+		"prompts": "^2.4.2"
 	}
 }

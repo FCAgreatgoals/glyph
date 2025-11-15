@@ -16,6 +16,6 @@
         "resolveJsonModule": true,
         "isolatedModules": true
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "emojis/**/*.d.ts"],
     "exclude": ["node_modules", "lib", "tests"]
 }

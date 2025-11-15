@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+import { Glyph } from "./classes/Glyph";
 
+export * from "./types";
+export { Glyph } from "./classes/Glyph";
 
-console.log('Hello World!');
+export default Glyph;
