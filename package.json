@@ -1,7 +1,7 @@
 {
 	"name": "@fca.gg/glyph",
 	"displayName": "Glyph",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "App emojis manager for Discord Bots",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
