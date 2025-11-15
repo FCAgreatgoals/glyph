@@ -17,6 +17,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Emojis } from "glyph/emojis";
+
 export type RemoteEmoji = {
     id: string;
     name: string;
@@ -25,7 +27,7 @@ export type RemoteEmoji = {
 
 export type GlyphEntry = {
     id: string;
-    name: string;
+    name: Emojis;
     identifier: string;
 };
 
