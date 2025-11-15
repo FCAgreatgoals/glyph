@@ -19,8 +19,8 @@
 
 import { existsSync } from "fs";
 import { resolve } from "path";
-import type { GlyphConfig } from "../types";
 import dotenv from "dotenv";
+import type { GlyphConfig } from "../types";
 
 export const DEFAULT_CONFIG: GlyphConfig = {
 	emojisDir: "./emojis",
