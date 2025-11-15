@@ -23,13 +23,19 @@ import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } f
 function authHeaders(token: string) {
 	return {
 		Authorization: `Bot ${token}`,
+	};
+}
+
+function authHeadersWithJson(token: string) {
+	return {
+		...authHeaders(token),
 		"Content-Type": "application/json",
 	};
 }
 
 export async function getBotUser(botToken: string) {
 	const res = await fetch(DISCORD_API_USERS_ME, {
-		headers: { Authorization: `Bot ${botToken}` },
+		headers: authHeaders(botToken),
 	});
 	if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
 
@@ -39,10 +45,10 @@ export async function getBotUser(botToken: string) {
 export async function listAppEmojis(
 	botToken: string,
 	appId: string
-): Promise<RemoteEmoji[]> {
+): Promise<Array<RemoteEmoji>> {
 	const res = await fetch(
 		DISCORD_API_APP_EMOJIS(appId),
-		{ headers: { Authorization: `Bot ${botToken}` } }
+		{ headers: authHeaders(botToken) }
 	);
 
 	if (!res.ok) throw new Error(`listAppEmojis failed: ${res.status}`);
@@ -65,7 +71,7 @@ export async function deleteAppEmoji(
 ) {
 	const res = await fetch(
 		DISCORD_API_APP_EMOJI(appId, emojiId),
-		{ method: "DELETE", headers: authHeaders(botToken) }
+		{ method: "DELETE", headers: authHeadersWithJson(botToken) }
 	);
 
 	if (!res.ok)
@@ -76,7 +82,7 @@ export async function uploadAppEmoji(
 	botToken: string,
 	appId: string,
 	name: string,
-	imageBase64: string, // base64 sans prefix
+	imageBase64: string, // base64 without prefix
 	mimeType = "image/png"
 ): Promise<RemoteEmoji> {
 	const body = {
@@ -88,7 +94,7 @@ export async function uploadAppEmoji(
 		DISCORD_API_APP_EMOJIS(appId),
 		{
 			method: "POST",
-			headers: authHeaders(botToken),
+			headers: authHeadersWithJson(botToken),
 			body: JSON.stringify(body),
 		}
 	);

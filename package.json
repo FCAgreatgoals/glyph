@@ -1,8 +1,8 @@
 {
 	"name": "@fca.gg/glyph",
 	"displayName": "Glyph",
-	"version": "1.0.1",
-	"description": "App emojis manager for Discord Bots",
+	"version": "1.0.2",
+	"description": "Discord emojis manager for bots (apps)",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"exports": {
@@ -11,6 +11,13 @@
 			"types": "./lib/index.d.ts"
 		}
 	},
+	"keywords": [
+		"discord",
+		"emojis",
+		"bot",
+		"app",
+		"api"
+	],
 	"bin": {
 		"glyph": "lib/cli/bin/glyph.js"
 	},
