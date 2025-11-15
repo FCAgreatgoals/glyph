@@ -28,12 +28,12 @@ export function runSetup(app: Command) {
     app.command("setup")
         .description("Setup default config for glyph")
         .action(async () => {
-            // Create emoji directory (always)
-
             const config = await loadConfig()
-            const absEmojiDir = path.join(process.cwd(), config.emojisDir)
 
             console.log('━━━ 🛠️ glyph setup ━━━━━━━━━━━━━━━━━━━━━━━')
+
+            // Create emoji directory (always)
+            const absEmojiDir = path.join(process.cwd(), config.emojisDir)
 
             if (!fs.existsSync(absEmojiDir)) {
                 fs.mkdirSync(absEmojiDir, { recursive: true })

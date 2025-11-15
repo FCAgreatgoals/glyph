@@ -39,7 +39,7 @@ export async function getBotUser(botToken: string) {
 export async function listAppEmojis(
 	botToken: string,
 	appId: string
-): Promise<RemoteEmoji[]> {
+): Promise<Array<RemoteEmoji>> {
 	const res = await fetch(
 		DISCORD_API_APP_EMOJIS(appId),
 		{ headers: { Authorization: `Bot ${botToken}` } }
@@ -76,7 +76,7 @@ export async function uploadAppEmoji(
 	botToken: string,
 	appId: string,
 	name: string,
-	imageBase64: string, // base64 sans prefix
+	imageBase64: string, // base64 without prefix
 	mimeType = "image/png"
 ): Promise<RemoteEmoji> {
 	const body = {

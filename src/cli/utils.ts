@@ -22,7 +22,7 @@ import { extname, basename, resolve } from "path";
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 import { IGNORED_EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
 
-export async function scanLocalEmojis(cfg: GlyphConfig): Promise<string[]> {
+export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> {
 	const dir = resolve(cfg.emojisDir);
 	const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
 	const out = new Set<string>();
@@ -45,10 +45,10 @@ export type LocalEmojiFile = {
 
 export async function listLocalEmojiFiles(
 	cfg: GlyphConfig
-): Promise<LocalEmojiFile[]> {
+): Promise<Array<LocalEmojiFile>> {
 	const dir = resolve(cfg.emojisDir);
 	const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-	const files: LocalEmojiFile[] = [];
+	const files: Array<LocalEmojiFile> = [];
 
 	for (const e of entries) {
 		if (!e.isFile()) continue;
@@ -61,7 +61,7 @@ export async function listLocalEmojiFiles(
 	return files.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function diffEmojis(local: string[], remoteNames: string[]) {
+export function diffEmojis(local: Array<string>, remoteNames: Array<string>) {
 	const localSet = new Set(local);
 	const remoteSet = new Set(remoteNames);
 	const toUpload = local.filter((n) => !remoteSet.has(n));
@@ -75,13 +75,13 @@ export function toIdentifier(name: string, id: string, animated?: boolean) {
 }
 
 export async function writeIndexFiles(
-	remote: RemoteEmoji[],
+	remote: Array<RemoteEmoji>,
 	cfg: GlyphConfig
 ): Promise<void> {
 	const dir = resolve(cfg.emojisDir);
 	await mkdir(dir, { recursive: true });
 
-	const list: GlyphEntry[] = remote
+	const list: Array<GlyphEntry> = remote
 		.map((e) => ({
 			id: e.id,
 			name: e.name,
