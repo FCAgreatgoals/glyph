@@ -21,14 +21,14 @@ import { existsSync } from "fs";
 import { resolve } from "path";
 import dotenv from "dotenv";
 import type { GlyphConfig } from "../types";
+import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
 
+// Default configuration
 export const DEFAULT_CONFIG: GlyphConfig = {
-	emojisDir: "./emojis",
+	emojisDir: DEFAULT_EMOJIS_DIR,
 	fileIndex: true,
 	botToken: undefined,
-};
-
-export const CONFIG_FILE = 'glyph.config.js'
+}
 
 export async function loadConfig(): Promise<GlyphConfig> {
 	const configPath = resolve(CONFIG_FILE);

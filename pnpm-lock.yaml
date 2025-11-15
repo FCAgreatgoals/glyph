@@ -12,8 +12,8 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0
       dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
+        specifier: ^17.2.1
+        version: 17.2.1
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -260,8 +260,8 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  dotenv@17.2.3:
-    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
+  dotenv@17.2.1:
+    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
     engines: {node: '>=12'}
 
   escape-string-regexp@4.0.0:
@@ -829,7 +829,7 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  dotenv@17.2.3: {}
+  dotenv@17.2.1: {}
 
   escape-string-regexp@4.0.0: {}
 

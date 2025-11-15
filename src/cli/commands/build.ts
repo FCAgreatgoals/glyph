@@ -32,20 +32,10 @@ import {
 	deleteAppEmoji,
 	uploadAppEmoji,
 } from "../discord";
+import { MIME_TYPES, DEFAULT_MIME_TYPE } from "../../constants";
 
 function guessMime(ext: string): string {
-	switch (ext.toLowerCase()) {
-		case ".gif":
-			return "image/gif";
-		case ".jpg":
-			return "image/jpg";
-		case ".jpeg":
-			return "image/jpeg";
-		case ".apng":
-			return "image/apng";
-		default:
-			return "image/png";
-	}
+	return MIME_TYPES[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
 }
 
 export function runBuild(app: Command) {

@@ -20,6 +20,7 @@
 import { readdir, mkdir, writeFile, readFile } from "fs/promises";
 import { extname, basename, resolve } from "path";
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
+import { IGNORED_EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
 
 export async function scanLocalEmojis(cfg: GlyphConfig): Promise<string[]> {
 	const dir = resolve(cfg.emojisDir);
@@ -29,7 +30,7 @@ export async function scanLocalEmojis(cfg: GlyphConfig): Promise<string[]> {
 	for (const e of entries) {
 		if (!e.isFile()) continue;
 		const ext = extname(e.name).toLowerCase();
-		if (ext === ".json" || ext === ".ts") continue;
+		if (IGNORED_EXTENSIONS.includes(ext)) continue;
 		const base = basename(e.name, ext);
 		out.add(base);
 	}
@@ -52,7 +53,7 @@ export async function listLocalEmojiFiles(
 	for (const e of entries) {
 		if (!e.isFile()) continue;
 		const ext = extname(e.name).toLowerCase();
-		if (ext === ".json" || ext === ".ts") continue;
+		if (IGNORED_EXTENSIONS.includes(ext)) continue;
 		const base = basename(e.name, ext);
 		files.push({ name: base, filePath: resolve(dir, e.name), ext });
 	}
@@ -95,12 +96,12 @@ export async function writeIndexFiles(
 		`}\n`;
 
 	await writeFile(
-		resolve(dir, "list.json"),
+		resolve(dir, LIST_FILE),
 		JSON.stringify(list, null, 2),
 		"utf8"
 	);
 
-	await writeFile(resolve(dir, "emojis.d.ts"), dts + "\n", "utf8");
+	await writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
 }
 
 export async function fileToBase64(path: string): Promise<string> {
