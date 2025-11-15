@@ -18,6 +18,7 @@
  */
 
 import type { RemoteEmoji } from "../types";
+import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } from "../constants";
 
 function authHeaders(token: string) {
 	return {
@@ -27,7 +28,7 @@ function authHeaders(token: string) {
 }
 
 export async function getBotUser(botToken: string) {
-	const res = await fetch("https://discord.com/api/v10/users/@me", {
+	const res = await fetch(DISCORD_API_USERS_ME, {
 		headers: { Authorization: `Bot ${botToken}` },
 	});
 	if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
@@ -40,7 +41,7 @@ export async function listAppEmojis(
 	appId: string
 ): Promise<RemoteEmoji[]> {
 	const res = await fetch(
-		`https://discord.com/api/v10/applications/${appId}/emojis`,
+		DISCORD_API_APP_EMOJIS(appId),
 		{ headers: { Authorization: `Bot ${botToken}` } }
 	);
 
@@ -63,7 +64,7 @@ export async function deleteAppEmoji(
 	emojiId: string
 ) {
 	const res = await fetch(
-		`https://discord.com/api/v10/applications/${appId}/emojis/${emojiId}`,
+		DISCORD_API_APP_EMOJI(appId, emojiId),
 		{ method: "DELETE", headers: authHeaders(botToken) }
 	);
 
@@ -84,7 +85,7 @@ export async function uploadAppEmoji(
 	};
 
 	const res = await fetch(
-		`https://discord.com/api/v10/applications/${appId}/emojis`,
+		DISCORD_API_APP_EMOJIS(appId),
 		{
 			method: "POST",
 			headers: authHeaders(botToken),
