@@ -94,9 +94,7 @@ This command will:
 import Glyph from "@fca.gg/glyph"
 
 // Initialize Glyph when starting your bot
-Glyph.init({
-    emojisDir: "./emojis"  // Optional, defaults to "./emojis"
-})
+Glyph.init()
 ```
 
 ### Retrieving Emojis
