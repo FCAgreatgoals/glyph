@@ -19,7 +19,6 @@
 
 import { existsSync } from "fs";
 import { resolve } from "path";
-import dotenv from "dotenv";
 import type { GlyphConfig } from "../types";
 import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
 
@@ -30,20 +29,17 @@ export const DEFAULT_CONFIG: GlyphConfig = {
 	botToken: undefined,
 }
 
-export async function loadConfig(): Promise<GlyphConfig> {
+export function loadConfig(): GlyphConfig {
 	const configPath = resolve(CONFIG_FILE);
 
 	if (existsSync(configPath)) {
-		const config = (await import(configPath))
-			.default as Partial<GlyphConfig>;
+		const config = require(configPath) as Partial<GlyphConfig>;
 
 		return {
 			...DEFAULT_CONFIG,
 			...config,
 		};
 	}
-
-	dotenv.config()
 
 	return {
 		...DEFAULT_CONFIG,

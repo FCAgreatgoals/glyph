@@ -28,7 +28,7 @@ export function registerSetupCommand(app: Command) {
     app.command("setup")
         .description("Setup default config for glyph")
         .action(async () => {
-            const config = await loadConfig()
+            const config = loadConfig()
 
             console.log('━━━ 🛠️ glyph setup ━━━━━━━━━━━━━━━━━━━━━━━')
 
