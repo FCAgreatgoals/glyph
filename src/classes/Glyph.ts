@@ -50,4 +50,8 @@ export class Glyph {
 	public static identifier(name: Emojis): string {
 		return this.get(name).identifier;
 	}
+
+	public static id(name: Emojis): string {
+		return this.get(name).id;
+	}
 }
