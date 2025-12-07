@@ -1,53 +1,53 @@
 {
-	"name": "@fca.gg/glyph",
-	"displayName": "Glyph",
-	"version": "1.1.1",
-	"description": "Discord emojis manager for bots (apps)",
-	"main": "lib/index.js",
-	"types": "lib/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./lib/index.js",
-			"require": "./lib/index.js",
-			"types": "./lib/index.d.ts"
-		}
-	},
-	"keywords": [
-		"discord",
-		"emojis",
-		"bot",
-		"app",
-		"api"
-	],
-	"bin": {
-		"glyph": "lib/cli/bin/glyph.js"
-	},
-	"files": [
-		"lib"
-	],
-	"scripts": {
-		"build": "tsc",
-		"dev": "tsc --watch",
-		"glyph": "node ./lib/cli/bin/glyph.js"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/FCAgreatgoals/glyph.git"
-	},
-	"author": "FCA <development@fca.gg>",
-	"license": "AGPL-3.0",
-	"devDependencies": {
-		"@stylistic/eslint-plugin": "^5.2.3",
-		"@types/node": "^20.0.0",
-		"@types/prompts": "^2.4.9",
-		"eslint": "^9.33.0",
-		"prettier": "^3.6.2",
-		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.39.0"
-	},
-	"dependencies": {
-		"commander": "^14.0.0",
-		"dotenv": "17.2.1",
-		"prompts": "^2.4.2"
-	}
+    "name": "@fca.gg/glyph",
+    "displayName": "Glyph",
+    "version": "1.1.1",
+    "description": "Discord emojis manager for bots (apps)",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./lib/index.js",
+            "require": "./lib/index.js",
+            "types": "./lib/index.d.ts"
+        }
+    },
+    "keywords": [
+        "discord",
+        "emojis",
+        "bot",
+        "app",
+        "api"
+    ],
+    "bin": {
+        "glyph": "lib/cli/bin/glyph.js"
+    },
+    "files": [
+        "lib"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "glyph": "node ./lib/cli/bin/glyph.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/FCAgreatgoals/glyph.git"
+    },
+    "author": "FCA <development@fca.gg>",
+    "license": "AGPL-3.0",
+    "devDependencies": {
+        "@stylistic/eslint-plugin": "^5.2.3",
+        "@types/node": "^20.0.0",
+        "@types/prompts": "^2.4.9",
+        "eslint": "^9.33.0",
+        "prettier": "^3.6.2",
+        "typescript": "^5.9.2",
+        "typescript-eslint": "^8.39.0"
+    },
+    "dependencies": {
+        "commander": "^14.0.0",
+        "dotenv": "17.2.1",
+        "prompts": "^2.4.2"
+    }
 }

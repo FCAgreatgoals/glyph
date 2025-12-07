@@ -36,11 +36,11 @@ export const DISCORD_API_APP_EMOJI = (appId: string, emojiId: string) => `${DISC
 
 // MIME types
 export const MIME_TYPES: Record<string, string> = {
-	'.gif': 'image/gif',
-	'.jpg': 'image/jpg',
-	'.jpeg': 'image/jpeg',
-	'.apng': 'image/apng',
-	'.png': 'image/png',
+    '.gif': 'image/gif',
+    '.jpg': 'image/jpg',
+    '.jpeg': 'image/jpeg',
+    '.apng': 'image/apng',
+    '.png': 'image/png',
 }
 
 export const DEFAULT_MIME_TYPE = 'image/png'

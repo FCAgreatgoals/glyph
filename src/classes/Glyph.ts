@@ -7,51 +7,51 @@ import { loadConfig } from "../cli/GlyphConfig";
 
 export class Glyph {
 
-	private static instance: Glyph;
-	private entries: Map<Emojis, GlyphEntry>
+    private static instance: Glyph;
+    private entries: Map<Emojis, GlyphEntry>
 
-	constructor(list: Array<GlyphEntry>) {
-		this.entries = new Map(list.map(e => [e.name, e]));
-	}
+    constructor(list: Array<GlyphEntry>) {
+        this.entries = new Map(list.map(e => [e.name, e]));
+    }
 
-	public static init() {
-		if (Glyph.instance) throw new Error("Glyph already Initialized");
+    public static init() {
+        if (Glyph.instance) throw new Error("Glyph already Initialized");
 
-		const config = loadConfig()
+        const config = loadConfig()
 
-		const list = JSON.parse(
-			readFileSync(resolve(config.emojisDir, LIST_FILE), "utf-8")
-		) as Array<GlyphEntry>;
+        const list = JSON.parse(
+            readFileSync(resolve(config.emojisDir, LIST_FILE), "utf-8")
+        ) as Array<GlyphEntry>;
 
-		Glyph.instance = new Glyph(list);
-	}
+        Glyph.instance = new Glyph(list);
+    }
 
-	private static ensure(): Glyph {
-		if (!Glyph.instance) throw new Error("Glyph not initialized");
-		return Glyph.instance;
-	}
+    private static ensure(): Glyph {
+        if (!Glyph.instance) throw new Error("Glyph not initialized");
+        return Glyph.instance;
+    }
 
-	public static get(name: Emojis): GlyphEntry {
-		return Glyph.ensure().entries.get(name) as GlyphEntry;
-	}
+    public static get(name: Emojis): GlyphEntry {
+        return Glyph.ensure().entries.get(name) as GlyphEntry;
+    }
 
-	public static size(): number {
-		return Glyph.ensure().entries.size;
-	}
+    public static size(): number {
+        return Glyph.ensure().entries.size;
+    }
 
-	public static list(): Array<GlyphEntry> {
-		return [...Glyph.ensure().entries.values()];
-	}
+    public static list(): Array<GlyphEntry> {
+        return [...Glyph.ensure().entries.values()];
+    }
 
-	public static has(name: Emojis): boolean {
-		return Glyph.ensure().entries.has(name);
-	}
+    public static has(name: Emojis): boolean {
+        return Glyph.ensure().entries.has(name);
+    }
 
-	public static identifier(name: Emojis): string {
-		return this.get(name).identifier;
-	}
+    public static identifier(name: Emojis): string {
+        return this.get(name).identifier;
+    }
 
-	public static id(name: Emojis): string {
-		return this.get(name).id;
-	}
+    public static id(name: Emojis): string {
+        return this.get(name).id;
+    }
 }

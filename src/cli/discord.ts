@@ -21,95 +21,95 @@ import type { RemoteEmoji } from "../types";
 import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } from "../constants";
 
 function authHeaders(token: string) {
-	return {
-		Authorization: `Bot ${token}`,
-	};
+    return {
+        Authorization: `Bot ${token}`,
+    };
 }
 
 function authHeadersWithJson(token: string) {
-	return {
-		...authHeaders(token),
-		"Content-Type": "application/json",
-	};
+    return {
+        ...authHeaders(token),
+        "Content-Type": "application/json",
+    };
 }
 
 export async function getBotUser(botToken: string) {
-	const res = await fetch(DISCORD_API_USERS_ME, {
-		headers: authHeaders(botToken),
-	});
-	if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
+    const res = await fetch(DISCORD_API_USERS_ME, {
+        headers: authHeaders(botToken),
+    });
+    if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
 
-	return (await res.json()) as { id: string };
+    return (await res.json()) as { id: string };
 }
 
 export async function listAppEmojis(
-	botToken: string,
-	appId: string
+    botToken: string,
+    appId: string
 ): Promise<Array<RemoteEmoji>> {
-	const res = await fetch(
-		DISCORD_API_APP_EMOJIS(appId),
-		{ headers: authHeaders(botToken) }
-	);
+    const res = await fetch(
+        DISCORD_API_APP_EMOJIS(appId),
+        { headers: authHeaders(botToken) }
+    );
 
-	if (!res.ok) throw new Error(`listAppEmojis failed: ${res.status}`);
+    if (!res.ok) throw new Error(`listAppEmojis failed: ${res.status}`);
 
-	const json = await res.json();
+    const json = await res.json();
 
-	const items = Array.isArray(json?.items) ? json.items : [];
+    const items = Array.isArray(json?.items) ? json.items : [];
 
-	return items.map((e: any) => ({
-		id: String(e.id),
-		name: String(e.name),
-		animated: !!e.animated,
-	}));
+    return items.map((e: any) => ({
+        id: String(e.id),
+        name: String(e.name),
+        animated: !!e.animated,
+    }));
 }
 
 export async function deleteAppEmoji(
-	botToken: string,
-	appId: string,
-	emojiId: string
+    botToken: string,
+    appId: string,
+    emojiId: string
 ) {
-	const res = await fetch(
-		DISCORD_API_APP_EMOJI(appId, emojiId),
-		{ method: "DELETE", headers: authHeadersWithJson(botToken) }
-	);
+    const res = await fetch(
+        DISCORD_API_APP_EMOJI(appId, emojiId),
+        { method: "DELETE", headers: authHeadersWithJson(botToken) }
+    );
 
-	if (!res.ok)
-		throw new Error(`deleteAppEmoji ${emojiId} failed: ${res.status}`);
+    if (!res.ok)
+        throw new Error(`deleteAppEmoji ${emojiId} failed: ${res.status}`);
 }
 
 export async function uploadAppEmoji(
-	botToken: string,
-	appId: string,
-	name: string,
-	imageBase64: string, // base64 without prefix
-	mimeType = "image/png"
+    botToken: string,
+    appId: string,
+    name: string,
+    imageBase64: string, // base64 without prefix
+    mimeType = "image/png"
 ): Promise<RemoteEmoji> {
-	const body = {
-		name,
-		image: `data:${mimeType};base64,${imageBase64}`,
-	};
+    const body = {
+        name,
+        image: `data:${mimeType};base64,${imageBase64}`,
+    };
 
-	const res = await fetch(
-		DISCORD_API_APP_EMOJIS(appId),
-		{
-			method: "POST",
-			headers: authHeadersWithJson(botToken),
-			body: JSON.stringify(body),
-		}
-	);
+    const res = await fetch(
+        DISCORD_API_APP_EMOJIS(appId),
+        {
+            method: "POST",
+            headers: authHeadersWithJson(botToken),
+            body: JSON.stringify(body),
+        }
+    );
 
-	const json = await res.json().catch(() => ({}));
+    const json = await res.json().catch(() => ({}));
 
-	if (!res.ok || !json?.id) {
-		throw new Error(
-			`uploadAppEmoji ${name} failed: ${res.status} ${JSON.stringify(json)}`
-		);
-	}
+    if (!res.ok || !json?.id) {
+        throw new Error(
+            `uploadAppEmoji ${name} failed: ${res.status} ${JSON.stringify(json)}`
+        );
+    }
 
-	return {
-		id: json.id,
-		name: json.name ?? name,
-		animated: json.animated,
-	};
+    return {
+        id: json.id,
+        name: json.name ?? name,
+        animated: json.animated,
+    };
 }

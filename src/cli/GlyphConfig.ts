@@ -24,26 +24,26 @@ import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
 
 // Default configuration
 export const DEFAULT_CONFIG: GlyphConfig = {
-	emojisDir: DEFAULT_EMOJIS_DIR,
-	fileIndex: true,
-	botToken: undefined,
+    emojisDir: DEFAULT_EMOJIS_DIR,
+    fileIndex: true,
+    botToken: undefined,
 }
 
 export function loadConfig(): GlyphConfig {
-	const configPath = resolve(CONFIG_FILE);
+    const configPath = resolve(CONFIG_FILE);
 
-	if (existsSync(configPath)) {
-		const config = require(configPath) as Partial<GlyphConfig>;
+    if (existsSync(configPath)) {
+        const config = require(configPath) as Partial<GlyphConfig>;
 
-		return {
-			...DEFAULT_CONFIG,
-			...config,
-		};
-	}
+        return {
+            ...DEFAULT_CONFIG,
+            ...config,
+        };
+    }
 
-	return {
-		...DEFAULT_CONFIG,
-		...(process.env.EMOJIS_DIR ? { emojisDir: process.env.EMOJIS_DIR } : {}),
-		...(process.env.TOKEN ? { botToken: process.env.TOKEN } : {})
-	}
+    return {
+        ...DEFAULT_CONFIG,
+        ...(process.env.EMOJIS_DIR ? { emojisDir: process.env.EMOJIS_DIR } : {}),
+        ...(process.env.TOKEN ? { botToken: process.env.TOKEN } : {})
+    }
 }

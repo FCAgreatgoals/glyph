@@ -23,88 +23,88 @@ import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 import { IGNORED_EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
 
 export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> {
-	const dir = resolve(cfg.emojisDir);
-	const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-	const out = new Set<string>();
+    const dir = resolve(cfg.emojisDir);
+    const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+    const out = new Set<string>();
 
-	for (const e of entries) {
-		if (!e.isFile()) continue;
-		const ext = extname(e.name).toLowerCase();
-		if (IGNORED_EXTENSIONS.includes(ext)) continue;
-		const base = basename(e.name, ext);
-		out.add(base);
-	}
-	return [...out].sort((a, b) => a.localeCompare(b));
+    for (const e of entries) {
+        if (!e.isFile()) continue;
+        const ext = extname(e.name).toLowerCase();
+        if (IGNORED_EXTENSIONS.includes(ext)) continue;
+        const base = basename(e.name, ext);
+        out.add(base);
+    }
+    return [...out].sort((a, b) => a.localeCompare(b));
 }
 
 export type LocalEmojiFile = {
-	name: string;
-	filePath: string;
-	ext: string;
+    name: string;
+    filePath: string;
+    ext: string;
 };
 
 export async function listLocalEmojiFiles(
-	cfg: GlyphConfig
+    cfg: GlyphConfig
 ): Promise<Array<LocalEmojiFile>> {
-	const dir = resolve(cfg.emojisDir);
-	const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-	const files: Array<LocalEmojiFile> = [];
+    const dir = resolve(cfg.emojisDir);
+    const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+    const files: Array<LocalEmojiFile> = [];
 
-	for (const e of entries) {
-		if (!e.isFile()) continue;
-		const ext = extname(e.name).toLowerCase();
-		if (IGNORED_EXTENSIONS.includes(ext)) continue;
-		const base = basename(e.name, ext);
-		files.push({ name: base, filePath: resolve(dir, e.name), ext });
-	}
+    for (const e of entries) {
+        if (!e.isFile()) continue;
+        const ext = extname(e.name).toLowerCase();
+        if (IGNORED_EXTENSIONS.includes(ext)) continue;
+        const base = basename(e.name, ext);
+        files.push({ name: base, filePath: resolve(dir, e.name), ext });
+    }
 
-	return files.sort((a, b) => a.name.localeCompare(b.name));
+    return files.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function diffEmojis(local: Array<string>, remoteNames: Array<string>) {
-	const localSet = new Set(local);
-	const remoteSet = new Set(remoteNames);
-	const toUpload = local.filter((n) => !remoteSet.has(n));
-	const toDelete = remoteNames.filter((n) => !localSet.has(n));
-	const kept = local.filter((n) => remoteSet.has(n));
-	return { toUpload, toDelete, kept };
+    const localSet = new Set(local);
+    const remoteSet = new Set(remoteNames);
+    const toUpload = local.filter((n) => !remoteSet.has(n));
+    const toDelete = remoteNames.filter((n) => !localSet.has(n));
+    const kept = local.filter((n) => remoteSet.has(n));
+    return { toUpload, toDelete, kept };
 }
 
 export function toIdentifier(name: string, id: string, animated?: boolean) {
-	return `<${animated ? "a" : ""}:${name}:${id}>`;
+    return `<${animated ? "a" : ""}:${name}:${id}>`;
 }
 
 export async function writeIndexFiles(
-	remote: Array<RemoteEmoji>,
-	cfg: GlyphConfig
+    remote: Array<RemoteEmoji>,
+    cfg: GlyphConfig
 ): Promise<void> {
-	const dir = resolve(cfg.emojisDir);
-	await mkdir(dir, { recursive: true });
+    const dir = resolve(cfg.emojisDir);
+    await mkdir(dir, { recursive: true });
 
-	const list: Array<GlyphEntry> = remote
-		.map((e) => ({
-			id: e.id,
-			name: e.name,
-			identifier: toIdentifier(e.name, e.id, e.animated),
-		}))
-		.sort((a, b) => a.name.localeCompare(b.name));
+    const list: Array<GlyphEntry> = remote
+        .map((e) => ({
+            id: e.id,
+            name: e.name,
+            identifier: toIdentifier(e.name, e.id, e.animated),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-	const dts =
-		`declare module "glyph/emojis" {\n` +
-		`  export type Emojis = ${list.length ? list.map((e) => `'${e.name}'`).join(" | ") : "never"};\n` +
-		`  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
-		`}\n`;
+    const dts =
+        `declare module "glyph/emojis" {\n` +
+        `  export type Emojis = ${list.length ? list.map((e) => `'${e.name}'`).join(" | ") : "never"};\n` +
+        `  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
+        `}\n`;
 
-	await writeFile(
-		resolve(dir, LIST_FILE),
-		JSON.stringify(list, null, 2),
-		"utf8"
-	);
+    await writeFile(
+        resolve(dir, LIST_FILE),
+        JSON.stringify(list, null, 2),
+        "utf8"
+    );
 
-	await writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
+    await writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
 }
 
 export async function fileToBase64(path: string): Promise<string> {
-	const buf = await readFile(path);
-	return buf.toString("base64");
+    const buf = await readFile(path);
+    return buf.toString("base64");
 }
