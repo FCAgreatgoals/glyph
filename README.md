@@ -59,7 +59,7 @@ TOKEN=your_discord_bot_token
 
 ### 3. Adding Emojis
 
-Place your emoji files (PNG, GIF, JPEG, APNG) in the `emojis/` folder:
+Place your emoji files (PNG, GIF, JPEG, APNG, WebP, AVIF) in the `emojis/` folder:
 
 ```
 emojis/
@@ -181,6 +181,8 @@ Glyph supports the following image formats:
 - Animated GIF (`.gif`)
 - JPEG (`.jpg`, `.jpeg`)
 - APNG (`.apng`)
+- WebP (`.webp`)
+- AVIF (`.avif`)
 
 ## 📝 Generated File Structure
 
