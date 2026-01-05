@@ -29,11 +29,15 @@ export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> 
 
     for (const e of entries) {
         if (!e.isFile()) continue;
+
         const ext = extname(e.name).toLowerCase();
+
         if (IGNORED_EXTENSIONS.includes(ext)) continue;
+
         const base = basename(e.name, ext);
         out.add(base);
     }
+
     return [...out].sort((a, b) => a.localeCompare(b));
 }
 
@@ -52,10 +56,18 @@ export async function listLocalEmojiFiles(
 
     for (const e of entries) {
         if (!e.isFile()) continue;
+
         const ext = extname(e.name).toLowerCase();
+
         if (IGNORED_EXTENSIONS.includes(ext)) continue;
+
         const base = basename(e.name, ext);
-        files.push({ name: base, filePath: resolve(dir, e.name), ext });
+
+        files.push({
+            name: base,
+            filePath: resolve(dir, e.name),
+            ext
+        });
     }
 
     return files.sort((a, b) => a.name.localeCompare(b.name));
@@ -64,9 +76,12 @@ export async function listLocalEmojiFiles(
 export function diffEmojis(local: Array<string>, remoteNames: Array<string>) {
     const localSet = new Set(local);
     const remoteSet = new Set(remoteNames);
+
     const toUpload = local.filter((n) => !remoteSet.has(n));
     const toDelete = remoteNames.filter((n) => !localSet.has(n));
+
     const kept = local.filter((n) => remoteSet.has(n));
+
     return { toUpload, toDelete, kept };
 }
 
@@ -74,12 +89,28 @@ export function toIdentifier(name: string, id: string, animated?: boolean) {
     return `<${animated ? "a" : ""}:${name}:${id}>`;
 }
 
+export async function safeDirAction(cfg: GlyphConfig): Promise<string> {
+    const dir = resolve(cfg.emojisDir);
+    await mkdir(dir, { recursive: true })
+
+    return dir;
+}
+
+export async function writeTypesFile(dir: string, list: Array<string>) {
+    const dts =
+        `declare module "glyph/emojis" {\n` +
+        `  export type Emojis = ${list.length ? list.map((e) => `'${e}'`).join(" | ") : "never"};\n` +
+        `  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
+        `}\n`;
+
+    return writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
+}
+
 export async function writeIndexFiles(
     remote: Array<RemoteEmoji>,
     cfg: GlyphConfig
 ): Promise<void> {
-    const dir = resolve(cfg.emojisDir);
-    await mkdir(dir, { recursive: true });
+    const dir = await safeDirAction(cfg);
 
     const list: Array<GlyphEntry> = remote
         .map((e) => ({
@@ -89,19 +120,13 @@ export async function writeIndexFiles(
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
-    const dts =
-        `declare module "glyph/emojis" {\n` +
-        `  export type Emojis = ${list.length ? list.map((e) => `'${e.name}'`).join(" | ") : "never"};\n` +
-        `  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
-        `}\n`;
-
     await writeFile(
         resolve(dir, LIST_FILE),
         JSON.stringify(list, null, 2),
         "utf8"
     );
 
-    await writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
+    await writeTypesFile(dir, list.map((e) => e.name));
 }
 
 export async function fileToBase64(path: string): Promise<string> {

@@ -19,7 +19,7 @@
 
 import { Glyph } from "./classes/Glyph";
 
-export * from "./types";
 export { Glyph } from "./classes/Glyph";
+export * from "./types";
 
 export default Glyph;
