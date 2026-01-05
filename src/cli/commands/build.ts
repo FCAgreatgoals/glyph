@@ -25,6 +25,8 @@ import {
     diffEmojis,
     writeIndexFiles,
     fileToBase64,
+    safeDirAction,
+    writeTypesFile,
 } from "../utils";
 import {
     getBotUser,
@@ -49,12 +51,21 @@ export function registerBuildCommand(app: Command) {
             console.log(`📄 File index       : ${cfg.fileIndex ? "Enabled" : "Disabled"}`);
             console.log("\n");
 
+            const localNames = await scanLocalEmojis(cfg);
+
             if (!cfg.botToken) {
-                console.error("❌ Missing bot token. Aborting.");
+                if (cfg.fileIndex) {
+                    console.log("📝 Updating type index file…");
+
+                    const dir = await safeDirAction(cfg);
+                    await writeTypesFile(dir, localNames);
+
+                    console.log("    → emojis.d.ts updated ✓\n");
+                } else {
+                    console.error("❌ Missing bot token. Aborting.");
+                }
                 return;
             }
-
-            const localNames = await scanLocalEmojis(cfg);
 
             const started = Date.now();
             try {
@@ -73,14 +84,18 @@ export function registerBuildCommand(app: Command) {
                 for (const name of toDelete) {
                     const r = remoteByName.get(name);
                     if (!r) continue;
+
                     try {
                         console.log(`🗑  Removing "${name}"…`);
+
                         await deleteAppEmoji(cfg.botToken, me.id, r.id);
-                        console.log("    → Removed ✓");
                         deleted++;
+
+                        console.log("    → Removed ✓");
                     } catch (err: any) {
-                        console.log(`    → Failed ✗ ${err?.message ?? err}`);
                         failed++;
+
+                        console.log(`    → Failed ✗ ${err?.message ?? err}`);
                     }
                 }
 
@@ -91,17 +106,21 @@ export function registerBuildCommand(app: Command) {
                 for (const name of toUpload) {
                     const f = filesByName.get(name);
                     if (!f) continue;
+
                     try {
                         console.log(`📤 Uploading "${name}"…`);
+
                         const b64 = await fileToBase64(f.filePath);
                         const mime = guessMime(f.ext);
 
                         await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime);
-                        console.log("    → Uploaded ✓");
                         uploaded++;
+
+                        console.log("    → Uploaded ✓");
                     } catch (err: any) {
-                        console.log(`    → Failed ✗ ${err?.message ?? err}`);
                         failed++;
+
+                        console.log(`    → Failed ✗ ${err?.message ?? err}`);
                     }
                 }
 
@@ -111,9 +130,12 @@ export function registerBuildCommand(app: Command) {
 
                 // Index generation
                 const finalRemote = await listAppEmojis(cfg.botToken, me.id);
+
                 if (cfg.fileIndex) {
                     console.log("📝 Updating index files…");
+
                     await writeIndexFiles(finalRemote, cfg);
+
                     console.log("    → list.json & emojis.d.ts updated ✓\n");
                 }
 
