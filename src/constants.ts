@@ -17,8 +17,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { GlyphConfig } from "./types";
-
 // Configuration files
 export const CONFIG_FILE = 'glyph.config.js'
 export const GITIGNORE_ENTRY = 'emojis/list.json'
@@ -34,16 +32,14 @@ export const DISCORD_API_USERS_ME = `${DISCORD_API_BASE_URL}/users/@me`
 export const DISCORD_API_APP_EMOJIS = (appId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis`
 export const DISCORD_API_APP_EMOJI = (appId: string, emojiId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis/${emojiId}`
 
-// MIME types
-export const MIME_TYPES: Record<string, string> = {
+export const EXTENSIONS: Record<string, string> = {
     '.gif': 'image/gif',
-    '.jpg': 'image/jpg',
+    '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.apng': 'image/apng',
     '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.avif': 'image/avif',
 }
 
-export const DEFAULT_MIME_TYPE = 'image/png'
-
-// File extensions to ignore
-export const IGNORED_EXTENSIONS = ['.json', '.ts']
+export const DEFAULT_MIME_TYPE = EXTENSIONS['.png']

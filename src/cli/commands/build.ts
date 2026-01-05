@@ -34,10 +34,10 @@ import {
     deleteAppEmoji,
     uploadAppEmoji,
 } from "../discord";
-import { MIME_TYPES, DEFAULT_MIME_TYPE } from "../../constants";
+import { DEFAULT_MIME_TYPE, EXTENSIONS } from "../../constants";
 
 function guessMime(ext: string): string {
-    return MIME_TYPES[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
+    return EXTENSIONS[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
 }
 
 export function registerBuildCommand(app: Command) {
