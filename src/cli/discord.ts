@@ -83,7 +83,7 @@ export async function uploadAppEmoji(
     appId: string,
     name: string,
     imageBase64: string, // base64 without prefix
-    mimeType = "image/png"
+    mimeType: string = "image/png"
 ): Promise<RemoteEmoji> {
     const body = {
         name,

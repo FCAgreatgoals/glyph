@@ -20,7 +20,7 @@
 import { readdir, mkdir, writeFile, readFile } from "fs/promises";
 import { extname, basename, resolve } from "path";
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
-import { IGNORED_EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
+import { EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
 
 export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> {
     const dir = resolve(cfg.emojisDir);
@@ -32,7 +32,7 @@ export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> 
 
         const ext = extname(e.name).toLowerCase();
 
-        if (IGNORED_EXTENSIONS.includes(ext)) continue;
+        if (!EXTENSIONS[ext]) continue;
 
         const base = basename(e.name, ext);
         out.add(base);
@@ -59,7 +59,7 @@ export async function listLocalEmojiFiles(
 
         const ext = extname(e.name).toLowerCase();
 
-        if (IGNORED_EXTENSIONS.includes(ext)) continue;
+        if (!EXTENSIONS[ext]) continue;
 
         const base = basename(e.name, ext);
 
