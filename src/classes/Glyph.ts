@@ -48,7 +48,9 @@ export class Glyph {
     }
 
     public static identifier(name: Emojis): string {
-        return this.get(name).identifier;
+        const entry = this.get(name);
+
+        return `<${entry.animated ? "a" : ""}:${entry.name}:${entry.id}>`;
     }
 
     public static id(name: Emojis): string {
