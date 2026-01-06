@@ -171,8 +171,8 @@ Synchronizes local emojis with Discord and generates index files.
 **Options:**
 - Automatically detects new emojis to upload
 - Deletes emojis that are no longer present locally
-- Generates `emojis/list.json` with all emojis
 - Generates `emojis/emojis.d.ts` for TypeScript support
+- Generates `emojis/list.json` with all emojis if token is provided
 
 ## 🎯 Supported Formats
 
@@ -192,12 +192,12 @@ Glyph supports the following image formats:
   {
     "id": "794367836033515531",
     "name": "happy",
-    "identifier": "<:happy:794367836033515531>"
+    "animated": false
   },
   {
     "id": "917871943041048636",
     "name": "party",
-    "identifier": "<a:party:917871943041048636>"
+    "animated": true
   }
 ]
 ```
@@ -209,7 +209,7 @@ declare module "glyph/emojis" {
   export type EmojisRecord = Record<Emojis, { 
     id: string; 
     name: string; 
-    identifier: string 
+    animated: boolean 
   }>;
 }
 ```
