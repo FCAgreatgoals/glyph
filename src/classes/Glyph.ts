@@ -47,10 +47,12 @@ export class Glyph {
         return Glyph.ensure().entries.has(name);
     }
 
-    public static identifier(name: Emojis): string {
-        const entry = this.get(name);
+    public static toIdentifier(emoji: GlyphEntry): string {
+        return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
+    }
 
-        return `<${entry.animated ? "a" : ""}:${entry.name}:${entry.id}>`;
+    public static identifier(name: Emojis): string {
+        return this.toIdentifier(this.get(name));
     }
 
     public static id(name: Emojis): string {
