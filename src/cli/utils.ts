@@ -85,10 +85,6 @@ export function diffEmojis(local: Array<string>, remoteNames: Array<string>) {
     return { toUpload, toDelete, kept };
 }
 
-export function toIdentifier(name: string, id: string, animated?: boolean) {
-    return `<${animated ? "a" : ""}:${name}:${id}>`;
-}
-
 export async function safeDirAction(cfg: GlyphConfig): Promise<string> {
     const dir = resolve(cfg.emojisDir);
     await mkdir(dir, { recursive: true })
@@ -100,7 +96,7 @@ export async function writeTypesFile(dir: string, list: Array<string>) {
     const dts =
         `declare module "glyph/emojis" {\n` +
         `  export type Emojis = ${list.length ? list.map((e) => `'${e}'`).join(" | ") : "never"};\n` +
-        `  export type EmojisRecord = Record<Emojis, { id: string; name: string; identifier: string }>;\n` +
+        `  export type EmojisRecord = Record<Emojis, { id: string; name: string; animated: boolean }>;\n` +
         `}\n`;
 
     return writeFile(resolve(dir, TYPES_FILE), dts + "\n", "utf8");
@@ -116,13 +112,13 @@ export async function writeIndexFiles(
         .map((e) => ({
             id: e.id,
             name: e.name,
-            identifier: toIdentifier(e.name, e.id, e.animated),
+            animated: e.animated ?? false
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
     await writeFile(
         resolve(dir, LIST_FILE),
-        JSON.stringify(list, null, 2),
+        JSON.stringify(list),
         "utf8"
     );
 

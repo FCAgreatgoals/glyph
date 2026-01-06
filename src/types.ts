@@ -28,7 +28,7 @@ export type RemoteEmoji = {
 export type GlyphEntry = {
     id: string;
     name: Emojis;
-    identifier: string;
+    animated: boolean;
 };
 
 export interface GlyphConfig {

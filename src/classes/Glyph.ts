@@ -47,8 +47,12 @@ export class Glyph {
         return Glyph.ensure().entries.has(name);
     }
 
+    public static toIdentifier(emoji: GlyphEntry): string {
+        return `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`;
+    }
+
     public static identifier(name: Emojis): string {
-        return this.get(name).identifier;
+        return this.toIdentifier(this.get(name));
     }
 
     public static id(name: Emojis): string {
