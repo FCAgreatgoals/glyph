@@ -17,8 +17,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type { RemoteEmoji } from "../types";
 import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } from "../constants";
+
+import type { RemoteEmoji } from "../types";
 
 function authHeaders(token: string) {
     return {

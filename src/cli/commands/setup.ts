@@ -17,11 +17,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Command } from 'commander'
+import prompts from 'prompts'
 import fs from 'fs'
 import path from 'path'
-import prompts from 'prompts'
+
 import { loadConfig } from '../GlyphConfig'
-import { Command } from 'commander'
 import { CONFIG_FILE, GITIGNORE_ENTRY, TYPES_FILE } from '../../constants'
 
 export function registerSetupCommand(app: Command) {

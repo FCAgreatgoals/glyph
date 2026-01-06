@@ -19,8 +19,10 @@
 
 import { existsSync } from "fs";
 import { resolve } from "path";
-import type { GlyphConfig } from "../types";
+
 import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
+
+import type { GlyphConfig } from "../types";
 
 // Default configuration
 export const DEFAULT_CONFIG: GlyphConfig = {

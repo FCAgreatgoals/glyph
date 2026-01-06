@@ -1,9 +1,10 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { GlyphEntry } from "../types";
-import type { Emojis } from "glyph/emojis";
 import { LIST_FILE } from "../constants";
 import { loadConfig } from "../cli/GlyphConfig";
+
+import type { GlyphEntry } from "../types";
+import type { Emojis } from "glyph/emojis";
 
 export class Glyph {
 

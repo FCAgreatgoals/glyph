@@ -18,6 +18,7 @@
  */
 
 import { Command } from "commander";
+
 import { loadConfig } from "../GlyphConfig";
 import {
     scanLocalEmojis,

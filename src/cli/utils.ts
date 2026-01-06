@@ -17,10 +17,17 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { readdir, mkdir, writeFile, readFile } from "fs/promises";
+import {
+    readdir,
+    mkdir,
+    writeFile,
+    readFile
+} from "fs/promises";
 import { extname, basename, resolve } from "path";
-import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
+
 import { EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
+
+import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 
 export async function scanLocalEmojis(cfg: GlyphConfig): Promise<Array<string>> {
     const dir = resolve(cfg.emojisDir);
