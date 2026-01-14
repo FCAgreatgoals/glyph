@@ -35,7 +35,7 @@ export function loadConfig(): GlyphConfig {
     const configPath = resolve(CONFIG_FILE);
 
     if (existsSync(configPath)) {
-        const config = require(configPath) as Partial<GlyphConfig>;
+        const config = require(configPath).default as Partial<GlyphConfig>;
 
         return {
             ...DEFAULT_CONFIG,
