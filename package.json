@@ -17,7 +17,8 @@
         "emojis",
         "bot",
         "app",
-        "api"
+        "api",
+        "cli"
     ],
     "bin": {
         "glyph": "lib/cli/bin/glyph.js"
