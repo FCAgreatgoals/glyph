@@ -56,6 +56,17 @@ export class Glyph {
         return this.toIdentifier(this.get(name));
     }
 
+    // Identifiant compact : le nom est réduit à `_`. Rendu identique côté Discord, mais markup plus
+    // court (`<:_:id>`) — utile quand beaucoup d'emoji doivent tenir sous la limite de taille des
+    // composants/messages.
+    public static toCompact(emoji: GlyphEntry): string {
+        return `<${emoji.animated ? "a" : ""}:_:${emoji.id}>`;
+    }
+
+    public static compact(name: Emojis): string {
+        return this.toCompact(this.get(name));
+    }
+
     public static id(name: Emojis): string {
         return this.get(name).id;
     }
