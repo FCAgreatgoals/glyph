@@ -1,7 +1,7 @@
 /**
- * This file is part of glyph (https://github.com/FCAgreatgoals/glyph.git).
+ * This file is part of Glyph (https://github.com/FCAgreatgoals/glyph).
  *
- * Copyright (C) 2025 SAS French Community Agency
+ * Copyright (C) 2026 SAS French Community Agency
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -15,6 +15,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Additional permission under the AGPL-3.0 section 7:
+ * You may use this library as a dependency in your own application without
+ * your application being subject to the AGPL-3.0. Only modifications to
+ * Glyph itself must be made publicly available. See LINKING_EXCEPTION.md
+ * for full details.
  */
 
 // Configuration files
