@@ -38,7 +38,7 @@ User Application being subject to the terms of the AGPL-3.0, provided that:
 |---|---|
 | You fork or patch Glyph and use it publicly | ✅ Publish your Glyph modifications (e.g. a patch repo) |
 | You fork or patch Glyph and expose it over a network | ✅ Publish your Glyph modifications (e.g. a patch repo) |
-| You use Glyph as a dependency (`npm install Glyph`) | ❌ No obligation, your code stays yours |
+| You use Glyph as a dependency (`npm install @fca.gg/glyph`) | ❌ No obligation, your code stays yours |
 | You wrap Glyph without modifying it | ❌ No obligation, your code stays yours |
 | You have private business logic alongside Glyph modifications | ✅ Only publish the Glyph modifications, keep the rest private |
 
