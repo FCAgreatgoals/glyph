@@ -28,6 +28,7 @@ import { Command } from "commander";
 import { loadConfig } from "../GlyphConfig";
 import {
     scanLocalEmojis,
+    invalidEmojiNames,
     listLocalEmojiFiles,
     diffEmojis,
     writeIndexFiles,
@@ -41,7 +42,7 @@ import {
     deleteAppEmoji,
     uploadAppEmoji,
 } from "../discord";
-import { DEFAULT_MIME_TYPE, EXTENSIONS } from "../../constants";
+import { DEFAULT_MIME_TYPE, EMOJI_NAME_RULE, EXTENSIONS } from "../../constants";
 
 function guessMime(ext: string): string {
     return EXTENSIONS[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
@@ -59,6 +60,22 @@ export function registerBuildCommand(app: Command) {
             console.log("\n");
 
             const localNames = await scanLocalEmojis(cfg);
+
+            // Avant la moindre requete : la synchronisation supprime avant d'envoyer, et un nom
+            // refuse par Discord au milieu du parcours laisse l'application a moitie faite.
+            const invalid = invalidEmojiNames(localNames);
+
+            if (invalid.length > 0) {
+                console.error(`❌ ${invalid.length} emoji name(s) Discord will refuse (${EMOJI_NAME_RULE}) :`);
+
+                for (const { name, suggestion } of invalid) {
+                    console.error(`    → "${name}" — rename the file to "${suggestion}"`);
+                }
+
+                console.error("\nNothing was uploaded or deleted.");
+                process.exitCode = 1;
+                return;
+            }
 
             if (!cfg.botToken) {
                 if (cfg.fileIndex) {

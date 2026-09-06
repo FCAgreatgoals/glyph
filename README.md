@@ -71,6 +71,17 @@ emojis/
 
 **Note:** The filename (without extension) will be used as the emoji name on Discord.
 
+Discord only accepts **2 to 32 characters, letters, digits and underscores**. A file named
+`flag-fr.png` is refused. `glyph build` checks every name before contacting Discord and stops with
+the offending files and the name to use instead, rather than failing halfway through a sync:
+
+```
+❌ 1 emoji name(s) Discord will refuse (2 to 32 characters, letters, digits and underscores only) :
+    → "flag-fr" — rename the file to "flag_fr"
+
+Nothing was uploaded or deleted.
+```
+
 ### 4. Synchronization
 
 Synchronize your emojis with Discord:
