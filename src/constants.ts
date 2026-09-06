@@ -38,6 +38,14 @@ export const DISCORD_API_USERS_ME = `${DISCORD_API_BASE_URL}/users/@me`
 export const DISCORD_API_APP_EMOJIS = (appId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis`
 export const DISCORD_API_APP_EMOJI = (appId: string, emojiId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis/${emojiId}`
 
+/*
+ * Discord n'accepte que des lettres, chiffres et underscores dans un nom d'emoji, entre 2 et 32
+ * caracteres. Un nom de fichier qui sort de la ne remonte qu'en 400 opaque, une fois la moitie de
+ * la synchronisation deja effectuee.
+ */
+export const EMOJI_NAME_REGEX = /^\w{2,32}$/
+export const EMOJI_NAME_RULE = '2 to 32 characters, letters, digits and underscores only'
+
 export const EXTENSIONS: Record<string, string> = {
     '.gif': 'image/gif',
     '.jpg': 'image/jpeg',

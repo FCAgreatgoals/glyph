@@ -31,7 +31,7 @@ import {
 } from "fs/promises";
 import { extname, basename, resolve } from "path";
 
-import { EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
+import { EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
 
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 
@@ -59,6 +59,17 @@ export type LocalEmojiFile = {
     filePath: string;
     ext: string;
 };
+
+/**
+ * Noms que Discord refusera, avec le nom corrige a proposer. Verifie avant toute requete : la
+ * synchronisation supprime avant d'envoyer, et echouer au milieu laisse l'application dans un etat
+ * que personne n'a demande.
+ */
+export function invalidEmojiNames(names: Array<string>): Array<{ name: string, suggestion: string }> {
+    return names
+        .filter(name => !EMOJI_NAME_REGEX.test(name))
+        .map(name => ({ name, suggestion: name.replace(/\W/g, '_').slice(0, 32).padEnd(2, '_') }));
+}
 
 export async function listLocalEmojiFiles(
     cfg: GlyphConfig
