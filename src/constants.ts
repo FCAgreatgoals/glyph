@@ -32,11 +32,33 @@ export const DEFAULT_EMOJIS_DIR = './emojis'
 export const LIST_FILE = 'list.json'
 export const TYPES_FILE = 'emojis.d.ts'
 
-// Discord API
+/*
+ * Discord API
+ *
+ * La racine est un parametre et non une constante : beaucoup d'infrastructures
+ * font passer leurs appels par un proxy REST, pour mutualiser les limites
+ * d'appel ou observer le trafic, et une adresse ecrite en dur oblige alors a
+ * contourner glyph plutot qu'a s'en servir. Elle sert aussi a viser un
+ * simulateur pendant les tests, sans toucher aux vrais emojis de l'application.
+ *
+ * `DISCORD_API_BASE_URL` reste la valeur par defaut : sans configuration, glyph
+ * parle a Discord exactement comme avant.
+ */
 export const DISCORD_API_BASE_URL = 'https://discord.com/api/v10'
-export const DISCORD_API_USERS_ME = `${DISCORD_API_BASE_URL}/users/@me`
-export const DISCORD_API_APP_EMOJIS = (appId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis`
-export const DISCORD_API_APP_EMOJI = (appId: string, emojiId: string) => `${DISCORD_API_BASE_URL}/applications/${appId}/emojis/${emojiId}`
+
+/*
+ * Une racine donnee par l'utilisateur arrive avec ou sans barre finale selon
+ * qui l'a ecrite. La normaliser ici evite les `//` au milieu des chemins, que
+ * certains proxies refusent et que Discord traite comme une route inconnue.
+ */
+export const normalizeApiBaseUrl = (url: string) => url.trim().replace(/\/+$/, '')
+
+export const DISCORD_API_USERS_ME = (api: string = DISCORD_API_BASE_URL) =>
+    `${normalizeApiBaseUrl(api)}/users/@me`
+export const DISCORD_API_APP_EMOJIS = (appId: string, api: string = DISCORD_API_BASE_URL) =>
+    `${normalizeApiBaseUrl(api)}/applications/${appId}/emojis`
+export const DISCORD_API_APP_EMOJI = (appId: string, emojiId: string, api: string = DISCORD_API_BASE_URL) =>
+    `${normalizeApiBaseUrl(api)}/applications/${appId}/emojis/${emojiId}`
 
 /*
  * Discord n'accepte que des lettres, chiffres et underscores dans un nom d'emoji, entre 2 et 32

@@ -42,7 +42,7 @@ import {
     deleteAppEmoji,
     uploadAppEmoji,
 } from "../discord";
-import { DEFAULT_MIME_TYPE, EMOJI_NAME_RULE, EXTENSIONS } from "../../constants";
+import { DEFAULT_MIME_TYPE, DISCORD_API_BASE_URL, EMOJI_NAME_RULE, EXTENSIONS } from "../../constants";
 
 function guessMime(ext: string): string {
     return EXTENSIONS[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
@@ -57,6 +57,16 @@ export function registerBuildCommand(app: Command) {
             console.log("━━━ 🧱 glyph build ━━━━━━━━━━━━━━━━━━━━━━━");
             console.log(`📁 Emojis directory : ${cfg.emojisDir}`);
             console.log(`📄 File index       : ${cfg.fileIndex ? "Enabled" : "Disabled"}`);
+
+            /*
+             * La cible ne s'affiche que lorsqu'elle n'est pas Discord. L'annoncer
+             * a chaque build ajouterait une ligne de bruit ; la, elle repond a la
+             * seule question qui compte quand une synchronisation semble ne pas
+             * prendre : ou est-ce que ca a ete pousse.
+             */
+            if (cfg.apiBaseUrl !== DISCORD_API_BASE_URL) {
+                console.log(`🌐 API              : ${cfg.apiBaseUrl}`);
+            }
             console.log("\n");
 
             const localNames = await scanLocalEmojis(cfg);
@@ -93,8 +103,8 @@ export function registerBuildCommand(app: Command) {
 
             const started = Date.now();
             try {
-                const me = await getBotUser(cfg.botToken);
-                const remote = await listAppEmojis(cfg.botToken, me.id);
+                const me = await getBotUser(cfg.botToken, cfg.apiBaseUrl);
+                const remote = await listAppEmojis(cfg.botToken, me.id, cfg.apiBaseUrl);
                 const remoteNames = remote
                     .map(e => e.name)
                     .sort((a, b) => a.localeCompare(b));
@@ -112,7 +122,7 @@ export function registerBuildCommand(app: Command) {
                     try {
                         console.log(`🗑  Removing "${name}"…`);
 
-                        await deleteAppEmoji(cfg.botToken, me.id, r.id);
+                        await deleteAppEmoji(cfg.botToken, me.id, r.id, cfg.apiBaseUrl);
                         deleted++;
 
                         console.log("    → Removed ✓");
@@ -137,7 +147,7 @@ export function registerBuildCommand(app: Command) {
                         const b64 = await fileToBase64(f.filePath);
                         const mime = guessMime(f.ext);
 
-                        await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime);
+                        await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime, cfg.apiBaseUrl);
                         uploaded++;
 
                         console.log("    → Uploaded ✓");
@@ -153,7 +163,7 @@ export function registerBuildCommand(app: Command) {
                 }
 
                 // Index generation
-                const finalRemote = await listAppEmojis(cfg.botToken, me.id);
+                const finalRemote = await listAppEmojis(cfg.botToken, me.id, cfg.apiBaseUrl);
 
                 if (cfg.fileIndex) {
                     console.log("📝 Updating index files…");

@@ -31,6 +31,7 @@ This command will:
 By default, the application will use the following environment variables if not explicitly configured:
 - `TOKEN` - for the Discord bot token
 - `EMOJIS_DIR` - for the emojis directory path
+- `DISCORD_API` - for the API root (defaults to `https://discord.com/api/v10`)
 
 **Manual Configuration:**
 
@@ -43,13 +44,42 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const config = {
-    emojisDir: "./emojis",       // Folder containing your emojis
-    fileIndex: true,             // Automatic index generation
-    botToken: process.env.TOKEN  // Your Discord bot token
+    emojisDir: "./emojis",            // Folder containing your emojis
+    fileIndex: true,                  // Automatic index generation
+    botToken: process.env.TOKEN,      // Your Discord bot token
+    apiBaseUrl: process.env.DISCORD_API // API root (unset: Discord)
 }
 
 export default config
 ```
+
+**Pointing glyph somewhere else:**
+
+`apiBaseUrl` decides where emojis are pushed. Two reasons to change it:
+
+- **A REST proxy.** Many setups route every Discord call through one, to share
+  rate-limit budgets across processes or to observe the traffic. Glyph should go
+  the same way as the rest of the application rather than around it.
+- **A simulator.** Pushing against a fake Discord during tests avoids touching
+  the real application's emojis, which every server the bot is on can see.
+
+Like every other setting, it comes either from the config file or, when there is
+no config file, from the environment. A config file is JavaScript, so it routes
+the variable itself if you want it to:
+
+```javascript
+apiBaseUrl: process.env.DISCORD_API   // unset: Discord
+```
+
+A setting left `undefined` falls back to its default rather than erasing it, so
+an unset variable means Discord, not a broken URL.
+
+```bash
+DISCORD_API=http://localhost:7070/api/v10 pnpm glyph build
+```
+
+When the root is not Discord, `glyph build` prints it. Pushing to a proxy
+without realising it is the kind of accident one visible line prevents.
 
 **Important:** Make sure you have your Discord token defined in your `.env` file:
 

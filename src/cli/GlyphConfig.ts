@@ -26,7 +26,7 @@
 import { existsSync } from "fs";
 import { resolve } from "path";
 
-import { CONFIG_FILE, DEFAULT_EMOJIS_DIR } from "../constants";
+import { CONFIG_FILE, DEFAULT_EMOJIS_DIR, DISCORD_API_BASE_URL, normalizeApiBaseUrl } from "../constants";
 
 import type { GlyphConfig } from "../types";
 
@@ -35,23 +35,50 @@ export const DEFAULT_CONFIG: GlyphConfig = {
     emojisDir: DEFAULT_EMOJIS_DIR,
     fileIndex: true,
     botToken: undefined,
+    apiBaseUrl: DISCORD_API_BASE_URL,
+}
+
+/*
+ * Ne garde que les valeurs reellement fournies.
+ *
+ * Un fichier de configuration route lui-meme l'environnement, comme le fait le
+ * modele avec `process.env.TOKEN`. Quand la variable n'est pas definie, la cle
+ * existe malgre tout et vaut `undefined` : sans ce filtre, elle ecraserait la
+ * valeur par defaut, et `apiBaseUrl` se retrouverait a `undefined` au lieu de
+ * l'API de Discord. Seuls `undefined` et la chaine vide sont ecartes, jamais
+ * `false`, qui est un choix.
+ */
+function present<T extends object>(source: T): Partial<T> {
+    const out: Partial<T> = {};
+
+    for (const [key, value] of Object.entries(source)) {
+        if (value === undefined || value === "") continue;
+
+        out[key as keyof T] = value as T[keyof T];
+    }
+
+    return out;
 }
 
 export function loadConfig(): GlyphConfig {
     const configPath = resolve(CONFIG_FILE);
 
-    if (existsSync(configPath)) {
-        const config = require(configPath).default as Partial<GlyphConfig>;
-
-        return {
+    const merged: GlyphConfig = existsSync(configPath)
+        ? {
             ...DEFAULT_CONFIG,
-            ...config,
+            ...present(require(configPath).default as Partial<GlyphConfig>),
+        }
+        : {
+            ...DEFAULT_CONFIG,
+            ...present({
+                emojisDir: process.env.EMOJIS_DIR,
+                botToken: process.env.TOKEN,
+                apiBaseUrl: process.env.DISCORD_API,
+            }),
         };
-    }
 
-    return {
-        ...DEFAULT_CONFIG,
-        ...(process.env.EMOJIS_DIR ? { emojisDir: process.env.EMOJIS_DIR } : {}),
-        ...(process.env.TOKEN ? { botToken: process.env.TOKEN } : {})
-    }
+    // La normalisation se fait une fois, sur la valeur qui a gagne, d'ou
+    // qu'elle vienne : une barre finale de trop produit sinon des `//` au
+    // milieu des chemins, que certains proxies refusent.
+    return { ...merged, apiBaseUrl: normalizeApiBaseUrl(merged.apiBaseUrl) };
 }
