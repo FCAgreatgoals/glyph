@@ -41,4 +41,11 @@ export interface GlyphConfig {
     emojisDir: string;
     fileIndex: boolean;
     botToken?: string;
+    /**
+     * Racine de l'API Discord, sans barre finale.
+     *
+     * Sert a passer par un proxy REST, ou a viser un simulateur pendant les
+     * tests. Par defaut, l'API de Discord.
+     */
+    apiBaseUrl: string;
 }

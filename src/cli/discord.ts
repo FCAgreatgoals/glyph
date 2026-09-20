@@ -40,8 +40,8 @@ function authHeadersWithJson(token: string) {
     };
 }
 
-export async function getBotUser(botToken: string) {
-    const res = await fetch(DISCORD_API_USERS_ME, {
+export async function getBotUser(botToken: string, api?: string) {
+    const res = await fetch(DISCORD_API_USERS_ME(api), {
         headers: authHeaders(botToken),
     });
     if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
@@ -51,10 +51,11 @@ export async function getBotUser(botToken: string) {
 
 export async function listAppEmojis(
     botToken: string,
-    appId: string
+    appId: string,
+    api?: string
 ): Promise<Array<RemoteEmoji>> {
     const res = await fetch(
-        DISCORD_API_APP_EMOJIS(appId),
+        DISCORD_API_APP_EMOJIS(appId, api),
         { headers: authHeaders(botToken) }
     );
 
@@ -74,10 +75,11 @@ export async function listAppEmojis(
 export async function deleteAppEmoji(
     botToken: string,
     appId: string,
-    emojiId: string
+    emojiId: string,
+    api?: string
 ) {
     const res = await fetch(
-        DISCORD_API_APP_EMOJI(appId, emojiId),
+        DISCORD_API_APP_EMOJI(appId, emojiId, api),
         { method: "DELETE", headers: authHeadersWithJson(botToken) }
     );
 
@@ -90,7 +92,8 @@ export async function uploadAppEmoji(
     appId: string,
     name: string,
     imageBase64: string, // base64 without prefix
-    mimeType: string = "image/png"
+    mimeType: string = "image/png",
+    api?: string
 ): Promise<RemoteEmoji> {
     const body = {
         name,
@@ -98,7 +101,7 @@ export async function uploadAppEmoji(
     };
 
     const res = await fetch(
-        DISCORD_API_APP_EMOJIS(appId),
+        DISCORD_API_APP_EMOJIS(appId, api),
         {
             method: "POST",
             headers: authHeadersWithJson(botToken),

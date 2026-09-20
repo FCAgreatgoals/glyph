@@ -104,7 +104,7 @@ export function registerSetupCommand(app: Command) {
                 const response = await prompts({
                     type: 'confirm',
                     name: 'createConfig',
-                    message: 'Do you want to create a configuration file? (If no, environment variables TOKEN and EMOJIS_DIR will be used)',
+                    message: 'Do you want to create a configuration file? (If no, environment variables TOKEN, EMOJIS_DIR and DISCORD_API will be used)',
                     initial: false
                 })
 
@@ -120,7 +120,11 @@ dotenv.config()
 const config = {
 \temojisDir: "./emojis",
 \tfileIndex: true,
-\tbotToken: process.env.TOKEN
+\tbotToken: process.env.TOKEN,
+
+\t// Where emojis are pushed. Unset, glyph talks to Discord; point it at a REST
+\t// proxy or a simulator to go through those instead.
+\tapiBaseUrl: process.env.DISCORD_API
 }
 
 export default config
@@ -129,7 +133,7 @@ export default config
                 fs.writeFileSync(configPath, configContent)
                 console.log(`⭐ Created ${CONFIG_FILE}\n`)
             } else {
-                console.log('🔧 Using environment variables (TOKEN and EMOJIS_DIR)\n')
+                console.log('🔧 Using environment variables (TOKEN, EMOJIS_DIR and DISCORD_API)\n')
             }
 
             console.log('✅ Setup complete.')
