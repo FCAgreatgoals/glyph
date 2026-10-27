@@ -24,6 +24,7 @@
  */
 
 import { Command } from "commander";
+import { basename } from "path";
 
 import { loadConfig } from "../GlyphConfig";
 import {
@@ -35,10 +36,13 @@ import {
     fileToBase64,
     safeDirAction,
     writeTypesFile,
+    fileAtRef,
+    hashBuffer,
     hashFile,
     isRetired,
     matchesAny,
     readLock,
+    resolveGitRef,
     writeLock,
 } from "../utils";
 import {
@@ -58,8 +62,9 @@ export function registerBuildCommand(app: Command) {
     app.command("build")
         .description("Synchronize emojis and generate indexes")
         .option("--rotate <patterns>", "replace these emojis even if glyph does not know they changed (comma-separated, * wildcard)")
+        .option("--since <ref>", "for emojis with no recorded hash yet, replace those whose file differs from this git commit")
         .option("--purge", "delete the old versions kept online after a replacement (old_<id>)")
-        .action(async (options: { rotate?: string, purge?: boolean }) => {
+        .action(async (options: { rotate?: string, since?: string, purge?: boolean }) => {
             const rotate = (options.rotate ?? "").split(",").map(p => p.trim()).filter(Boolean);
             const cfg = loadConfig();
 
@@ -112,6 +117,7 @@ export function registerBuildCommand(app: Command) {
 
             const started = Date.now();
             try {
+                const since = options.since ? await resolveGitRef(cfg, options.since) : null;
                 const me = await getBotUser(cfg.botToken, cfg.apiBaseUrl);
                 const remote = await listAppEmojis(cfg.botToken, me.id, cfg.apiBaseUrl);
                 const retired = remote.filter(e => isRetired(e.name));
@@ -128,12 +134,21 @@ export function registerBuildCommand(app: Command) {
                 const hashes = new Map(await Promise.all(localFiles.map(async f => [f.name, await hashFile(f.filePath)] as const)));
 
                 /*
-                 * Change depuis le dernier envoi (empreinte différente), ou demande avec --rotate. Un emoji
-                 * jamais vu par l'état (premier build versionne) sert de base : on ne sait pas s'il a changé.
+                 * Changé depuis le dernier envoi (empreinte différente), ou demandé avec --rotate. Un emoji que
+                 * l'état ne connaît pas encore n'est remplacé que si son fichier diffère de celui du commit
+                 * --since (le contenu, pas la date) ; sinon il sert de base.
                  */
+                const unknownChanged = new Set<string>();
+                if (since) {
+                    for (const name of kept.filter(n => !lock.emojis[n])) {
+                        const before = await fileAtRef(cfg, since, basename(filesByName.get(name)!.filePath));
+                        if (before && hashBuffer(before) !== hashes.get(name)) unknownChanged.add(name);
+                    }
+                }
+
                 const toRotate = kept.filter(name => {
                     const known = lock.emojis[name]?.hash;
-                    return matchesAny(name, rotate) || (known !== undefined && known !== hashes.get(name));
+                    return matchesAny(name, rotate) || unknownChanged.has(name) || (known !== undefined && known !== hashes.get(name));
                 });
 
                 // DELETE

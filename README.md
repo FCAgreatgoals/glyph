@@ -218,6 +218,7 @@ Synchronizes local emojis with Discord and generates index files.
 
 **Options:**
 - `--rotate <patterns>`: replace these emojis even if Glyph has no record of their previous image (comma-separated names, `*` wildcard), e.g. `--rotate 'iconLog*,iconSanctions*'`
+- `--since <ref>`: for emojis with no recorded hash yet, replace those whose file differs from this git commit, e.g. `--since v1.4.0`
 - `--purge`: delete the old versions kept online after a replacement
 
 #### Replacing an emoji
@@ -231,8 +232,10 @@ index: run `glyph build --purge` once every instance uses the new ids.
 Glyph knows an image changed through `emojis/glyph.lock.json`, which records, per application, the
 id and the SHA-256 of the file last sent to Discord (Discord re-encodes images, so they cannot be
 compared to what it serves). Keep it out of git like `list.json`: each environment (bot) has its
-own. An emoji with no entry yet (first versioned build, new environment) is recorded as is; use
-`--rotate` to replace it anyway.
+own. An emoji with no entry yet (first versioned build, new environment) is recorded as is. To
+replace the ones whose image changed in the meantime, pass the last commit that environment was
+built from: `--since <ref>` compares each file's content with that commit (dates are not reliable:
+emojis are usually uploaded before their file is committed). `--rotate` replaces emojis regardless.
 
 ## 🎯 Supported Formats
 

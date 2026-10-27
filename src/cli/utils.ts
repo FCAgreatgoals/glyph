@@ -30,6 +30,8 @@ import {
     readFile
 } from "fs/promises";
 import { createHash } from "crypto";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import { extname, basename, resolve } from "path";
 
 import { EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, LOCK_FILE, RETIRED_NAME_REGEX, TYPES_FILE } from "../constants";
@@ -82,7 +84,7 @@ export function isRetired(name: string): boolean {
 
 /*
  * `--rotate iconLog*,iconBan` : motifs séparés par des virgules, `*` pour n'importe quelle suite. Sert à
- * remplacer des emojis que glyph ne sait pas changés, quand l'état n'existe pas encore.
+ * remplacer des emojis à la main, même inchangés.
  */
 export function matchesAny(name: string, patterns: Array<string>): boolean {
     return patterns.some(pattern => new RegExp(`^${pattern.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*')}$`).test(name));
@@ -93,8 +95,28 @@ export type GlyphLock = {
     emojis: Record<string, { id: string, hash: string }>;
 };
 
+export function hashBuffer(buffer: Buffer): string {
+    return createHash("sha256").update(buffer).digest("hex");
+}
+
 export async function hashFile(path: string): Promise<string> {
-    return createHash("sha256").update(await readFile(path)).digest("hex");
+    return hashBuffer(await readFile(path));
+}
+
+const execFileAsync = promisify(execFile);
+
+// `--since <ref>` : le commit doit exister avant toute écriture, sinon chaque emoji paraîtrait inchangé.
+export async function resolveGitRef(cfg: GlyphConfig, ref: string): Promise<string> {
+    const { stdout } = await execFileAsync("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`], { cwd: resolve(cfg.emojisDir) })
+        .catch(() => { throw new Error(`--since: "${ref}" is not a commit of this git repository`); });
+    return stdout.trim();
+}
+
+// Le fichier tel qu'il était à ce commit, ou null s'il n'existait pas encore.
+export async function fileAtRef(cfg: GlyphConfig, commit: string, fileName: string): Promise<Buffer | null> {
+    return execFileAsync("git", ["show", `${commit}:./${fileName}`], { cwd: resolve(cfg.emojisDir), encoding: "buffer", maxBuffer: 64 * 1024 * 1024 })
+        .then(({ stdout }) => stdout)
+        .catch(() => null);
 }
 
 // L'état d'une autre application (jeton changé) ne dit rien de celle-ci : on repart de zéro.
