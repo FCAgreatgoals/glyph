@@ -27,6 +27,24 @@ import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } f
 
 import type { RemoteEmoji } from "../types";
 
+const MAX_RATE_LIMIT_RETRIES = 5;
+const MAX_RATE_LIMIT_WAIT_S = 120;
+
+// 429 : Discord dit combien attendre (`retry_after`, en secondes). Un remplacement en masse y passe forcément.
+async function discordFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    for (let attempt = 0; ; attempt++) {
+        const res = await fetch(url, init);
+        if (res.status !== 429 || attempt >= MAX_RATE_LIMIT_RETRIES) return res;
+
+        const body = await res.clone().json().catch(() => ({}));
+        const wait = Number(body?.retry_after ?? res.headers.get("retry-after") ?? 1);
+        if (wait > MAX_RATE_LIMIT_WAIT_S) return res;
+
+        console.log(`    … rate limited, retrying in ${wait.toFixed(1)}s`);
+        await new Promise(r => setTimeout(r, wait * 1000 + 50));
+    }
+}
+
 function authHeaders(token: string) {
     return {
         Authorization: `Bot ${token}`,
@@ -41,7 +59,7 @@ function authHeadersWithJson(token: string) {
 }
 
 export async function getBotUser(botToken: string, api?: string) {
-    const res = await fetch(DISCORD_API_USERS_ME(api), {
+    const res = await discordFetch(DISCORD_API_USERS_ME(api), {
         headers: authHeaders(botToken),
     });
     if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
@@ -54,7 +72,7 @@ export async function listAppEmojis(
     appId: string,
     api?: string
 ): Promise<Array<RemoteEmoji>> {
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJIS(appId, api),
         { headers: authHeaders(botToken) }
     );
@@ -78,7 +96,7 @@ export async function deleteAppEmoji(
     emojiId: string,
     api?: string
 ) {
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJI(appId, emojiId, api),
         { method: "DELETE", headers: authHeadersWithJson(botToken) }
     );
@@ -94,7 +112,7 @@ export async function renameAppEmoji(
     name: string,
     api?: string
 ) {
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJI(appId, emojiId, api),
         {
             method: "PATCH",
@@ -120,7 +138,7 @@ export async function uploadAppEmoji(
         image: `data:${mimeType};base64,${imageBase64}`,
     };
 
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJIS(appId, api),
         {
             method: "POST",

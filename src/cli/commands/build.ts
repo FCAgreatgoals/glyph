@@ -241,8 +241,9 @@ export function registerBuildCommand(app: Command) {
                 }
 
                 // Base de l'état : un emoji gardé sans empreinte connue prend celle du fichier actuel.
+                // Un remplacement raté n'est pas une base : --since ou --rotate doit pouvoir le retenter.
                 for (const name of kept) {
-                    if (!lock.emojis[name] && hashes.has(name)) lock.emojis[name] = { id: remoteByName.get(name)!.id, hash: hashes.get(name)! };
+                    if (!lock.emojis[name] && hashes.has(name) && !toRotate.includes(name)) lock.emojis[name] = { id: remoteByName.get(name)!.id, hash: hashes.get(name)! };
                 }
                 for (const name of Object.keys(lock.emojis)) {
                     if (!hashes.has(name)) delete lock.emojis[name];
