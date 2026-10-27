@@ -30,10 +30,33 @@ import type { RemoteEmoji } from "../types";
 const MAX_RATE_LIMIT_RETRIES = 5;
 const MAX_RATE_LIMIT_WAIT_S = 120;
 
-// 429 : Discord dit combien attendre (`retry_after`, en secondes). Un remplacement en masse y passe forcément.
+// Compteur restant de chaque route (ids retirés), lu dans les en-têtes X-RateLimit de sa dernière réponse.
+const routeLimits = new Map<string, { remaining: number, resetAt: number }>();
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+/*
+ * Discord annonce à chaque réponse combien de requêtes la route accepte encore et quand le compteur repart :
+ * à zéro, on attend avant d'envoyer la suivante plutôt que de prendre un 429. Le 429 reste rattrapé
+ * (`retry_after`), au cas où une autre instance partagerait la limite.
+ */
 async function discordFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    const route = `${init.method ?? "GET"} ${url.replace(/\d{17,20}/g, ":id")}`;
+
     for (let attempt = 0; ; attempt++) {
+        const limit = routeLimits.get(route);
+        if (limit && limit.remaining <= 0 && limit.resetAt > Date.now()) {
+            const wait = limit.resetAt - Date.now();
+            if (wait > 1000) console.log(`    … pacing, waiting ${(wait / 1000).toFixed(1)}s for Discord's rate limit`);
+            await sleep(wait + 50);
+        }
+
         const res = await fetch(url, init);
+        const remaining = res.headers.get("x-ratelimit-remaining");
+        const resetAfter = res.headers.get("x-ratelimit-reset-after");
+        if (remaining !== null && resetAfter !== null)
+            routeLimits.set(route, { remaining: Number(remaining), resetAt: Date.now() + Number(resetAfter) * 1000 });
+
         if (res.status !== 429 || attempt >= MAX_RATE_LIMIT_RETRIES) return res;
 
         const body = await res.clone().json().catch(() => ({}));
@@ -41,7 +64,7 @@ async function discordFetch(url: string, init: RequestInit = {}): Promise<Respon
         if (wait > MAX_RATE_LIMIT_WAIT_S) return res;
 
         console.log(`    … rate limited, retrying in ${wait.toFixed(1)}s`);
-        await new Promise(r => setTimeout(r, wait * 1000 + 50));
+        await sleep(wait * 1000 + 50);
     }
 }
 
