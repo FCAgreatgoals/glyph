@@ -87,6 +87,26 @@ export async function deleteAppEmoji(
         throw new Error(`deleteAppEmoji ${emojiId} failed: ${res.status}`);
 }
 
+export async function renameAppEmoji(
+    botToken: string,
+    appId: string,
+    emojiId: string,
+    name: string,
+    api?: string
+) {
+    const res = await fetch(
+        DISCORD_API_APP_EMOJI(appId, emojiId, api),
+        {
+            method: "PATCH",
+            headers: authHeadersWithJson(botToken),
+            body: JSON.stringify({ name }),
+        }
+    );
+
+    if (!res.ok)
+        throw new Error(`renameAppEmoji ${emojiId} failed: ${res.status}`);
+}
+
 export async function uploadAppEmoji(
     botToken: string,
     appId: string,

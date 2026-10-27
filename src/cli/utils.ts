@@ -29,9 +29,10 @@ import {
     writeFile,
     readFile
 } from "fs/promises";
+import { createHash } from "crypto";
 import { extname, basename, resolve } from "path";
 
-import { EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, TYPES_FILE } from "../constants";
+import { EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, LOCK_FILE, RETIRED_NAME_REGEX, TYPES_FILE } from "../constants";
 
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 
@@ -67,8 +68,48 @@ export type LocalEmojiFile = {
  */
 export function invalidEmojiNames(names: Array<string>): Array<{ name: string, suggestion: string }> {
     return names
-        .filter(name => !EMOJI_NAME_REGEX.test(name))
-        .map(name => ({ name, suggestion: name.replace(/\W/g, '_').slice(0, 32).padEnd(2, '_') }));
+        .filter(name => !EMOJI_NAME_REGEX.test(name) || RETIRED_NAME_REGEX.test(name))
+        .map(name => ({
+            name,
+            suggestion: RETIRED_NAME_REGEX.test(name) ? `emoji_${name}` : name.replace(/\W/g, '_').slice(0, 32).padEnd(2, '_')
+        }));
+}
+
+// Ancienne version d'un emoji gardée en ligne (`old_<id>`), hors index et hors synchronisation.
+export function isRetired(name: string): boolean {
+    return RETIRED_NAME_REGEX.test(name);
+}
+
+/*
+ * `--rotate iconLog*,iconBan` : motifs séparés par des virgules, `*` pour n'importe quelle suite. Sert à
+ * remplacer des emojis que glyph ne sait pas changés, quand l'état n'existe pas encore.
+ */
+export function matchesAny(name: string, patterns: Array<string>): boolean {
+    return patterns.some(pattern => new RegExp(`^${pattern.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*')}$`).test(name));
+}
+
+export type GlyphLock = {
+    appId: string;
+    emojis: Record<string, { id: string, hash: string }>;
+};
+
+export async function hashFile(path: string): Promise<string> {
+    return createHash("sha256").update(await readFile(path)).digest("hex");
+}
+
+// L'état d'une autre application (jeton changé) ne dit rien de celle-ci : on repart de zéro.
+export async function readLock(cfg: GlyphConfig, appId: string): Promise<GlyphLock> {
+    const raw = await readFile(resolve(cfg.emojisDir, LOCK_FILE), "utf8").catch(() => null);
+    const lock = raw ? JSON.parse(raw) as GlyphLock : null;
+
+    return lock?.appId === appId ? lock : { appId, emojis: {} };
+}
+
+export async function writeLock(cfg: GlyphConfig, lock: GlyphLock): Promise<void> {
+    const dir = await safeDirAction(cfg);
+    const emojis = Object.fromEntries(Object.entries(lock.emojis).sort(([a], [b]) => a.localeCompare(b)));
+
+    await writeFile(resolve(dir, LOCK_FILE), JSON.stringify({ appId: lock.appId, emojis }, null, 2) + "\n", "utf8");
 }
 
 export async function listLocalEmojiFiles(
@@ -133,6 +174,7 @@ export async function writeIndexFiles(
     const dir = await safeDirAction(cfg);
 
     const list: Array<GlyphEntry> = remote
+        .filter((e) => !isRetired(e.name))
         .map((e) => ({
             id: e.id,
             name: e.name,

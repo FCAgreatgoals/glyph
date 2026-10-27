@@ -209,11 +209,30 @@ Initializes Glyph configuration in your project.
 ### `glyph build`
 Synchronizes local emojis with Discord and generates index files.
 
-**Options:**
+**Behavior:**
 - Automatically detects new emojis to upload
 - Deletes emojis that are no longer present locally
+- Replaces emojis whose image changed (see below)
 - Generates `emojis/emojis.d.ts` for TypeScript support
 - Generates `emojis/list.json` with all emojis if token is provided
+
+**Options:**
+- `--rotate <patterns>`: replace these emojis even if Glyph has no record of their previous image (comma-separated names, `*` wildcard), e.g. `--rotate 'iconLog*,iconSanctions*'`
+- `--purge`: delete the old versions kept online after a replacement
+
+#### Replacing an emoji
+
+Discord cannot change the image of an existing emoji. When a file changes, `glyph build` renames
+the emoji online to `old_<id>` and uploads the new image under the original name, with a new id.
+The old version stays valid, so messages already sent keep showing it while your bot restarts
+with the new `list.json`. `old_*` emojis are never deleted automatically and never appear in the
+index: run `glyph build --purge` once every instance uses the new ids.
+
+Glyph knows an image changed through `emojis/glyph.lock.json`, which records, per application, the
+id and the SHA-256 of the file last sent to Discord (Discord re-encodes images, so they cannot be
+compared to what it serves). Keep it out of git like `list.json`: each environment (bot) has its
+own. An emoji with no entry yet (first versioned build, new environment) is recorded as is; use
+`--rotate` to replace it anyway.
 
 ## 🎯 Supported Formats
 
