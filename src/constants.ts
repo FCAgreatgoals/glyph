@@ -33,6 +33,22 @@ export const LIST_FILE = 'list.json'
 export const TYPES_FILE = 'emojis.d.ts'
 
 /*
+ * Ce que glyph a envoyé à Discord, par application : l'empreinte de chaque image. Discord ne rend pas
+ * l'image d'origine (il la réencode), c'est la seule façon de savoir qu'un fichier a changé depuis.
+ * Propre à l'application visée, donc ignoré par git comme list.json.
+ */
+export const LOCK_FILE = 'glyph.lock.json'
+export const LOCK_GITIGNORE_ENTRY = 'emojis/glyph.lock.json'
+
+/*
+ * Une image changée ne remplace pas l'emoji en place : l'ancien est renommé `old_<id>` et reste
+ * valide : les messages déjà envoyés et le bot pas encore redémarré l'affichent encore, jusqu'à
+ * `glyph build --purge`.
+ */
+export const RETIRED_PREFIX = 'old_'
+export const RETIRED_NAME_REGEX = /^old_\d+$/
+
+/*
  * Discord API
  *
  * La racine est un parametre et non une constante : beaucoup d'infrastructures

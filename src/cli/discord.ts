@@ -27,6 +27,47 @@ import { DISCORD_API_USERS_ME, DISCORD_API_APP_EMOJIS, DISCORD_API_APP_EMOJI } f
 
 import type { RemoteEmoji } from "../types";
 
+const MAX_RATE_LIMIT_RETRIES = 5;
+const MAX_RATE_LIMIT_WAIT_S = 120;
+
+// Compteur restant de chaque route (ids retirés), lu dans les en-têtes X-RateLimit de sa dernière réponse.
+const routeLimits = new Map<string, { remaining: number, resetAt: number }>();
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+/*
+ * Discord annonce à chaque réponse combien de requêtes la route accepte encore et quand le compteur repart :
+ * à zéro, on attend avant d'envoyer la suivante plutôt que de prendre un 429. Le 429 reste rattrapé
+ * (`retry_after`), au cas où une autre instance partagerait la limite.
+ */
+async function discordFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    const route = `${init.method ?? "GET"} ${url.replace(/\d{17,20}/g, ":id")}`;
+
+    for (let attempt = 0; ; attempt++) {
+        const limit = routeLimits.get(route);
+        if (limit && limit.remaining <= 0 && limit.resetAt > Date.now()) {
+            const wait = limit.resetAt - Date.now();
+            if (wait > 1000) console.log(`    … pacing, waiting ${(wait / 1000).toFixed(1)}s for Discord's rate limit`);
+            await sleep(wait + 50);
+        }
+
+        const res = await fetch(url, init);
+        const remaining = res.headers.get("x-ratelimit-remaining");
+        const resetAfter = res.headers.get("x-ratelimit-reset-after");
+        if (remaining !== null && resetAfter !== null)
+            routeLimits.set(route, { remaining: Number(remaining), resetAt: Date.now() + Number(resetAfter) * 1000 });
+
+        if (res.status !== 429 || attempt >= MAX_RATE_LIMIT_RETRIES) return res;
+
+        const body = await res.clone().json().catch(() => ({}));
+        const wait = Number(body?.retry_after ?? res.headers.get("retry-after") ?? 1);
+        if (wait > MAX_RATE_LIMIT_WAIT_S) return res;
+
+        console.log(`    … rate limited, retrying in ${wait.toFixed(1)}s`);
+        await sleep(wait * 1000 + 50);
+    }
+}
+
 function authHeaders(token: string) {
     return {
         Authorization: `Bot ${token}`,
@@ -41,7 +82,7 @@ function authHeadersWithJson(token: string) {
 }
 
 export async function getBotUser(botToken: string, api?: string) {
-    const res = await fetch(DISCORD_API_USERS_ME(api), {
+    const res = await discordFetch(DISCORD_API_USERS_ME(api), {
         headers: authHeaders(botToken),
     });
     if (!res.ok) throw new Error(`getBotUser failed: ${res.status}`);
@@ -54,7 +95,7 @@ export async function listAppEmojis(
     appId: string,
     api?: string
 ): Promise<Array<RemoteEmoji>> {
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJIS(appId, api),
         { headers: authHeaders(botToken) }
     );
@@ -78,13 +119,33 @@ export async function deleteAppEmoji(
     emojiId: string,
     api?: string
 ) {
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJI(appId, emojiId, api),
         { method: "DELETE", headers: authHeadersWithJson(botToken) }
     );
 
     if (!res.ok)
         throw new Error(`deleteAppEmoji ${emojiId} failed: ${res.status}`);
+}
+
+export async function renameAppEmoji(
+    botToken: string,
+    appId: string,
+    emojiId: string,
+    name: string,
+    api?: string
+) {
+    const res = await discordFetch(
+        DISCORD_API_APP_EMOJI(appId, emojiId, api),
+        {
+            method: "PATCH",
+            headers: authHeadersWithJson(botToken),
+            body: JSON.stringify({ name }),
+        }
+    );
+
+    if (!res.ok)
+        throw new Error(`renameAppEmoji ${emojiId} failed: ${res.status}`);
 }
 
 export async function uploadAppEmoji(
@@ -100,7 +161,7 @@ export async function uploadAppEmoji(
         image: `data:${mimeType};base64,${imageBase64}`,
     };
 
-    const res = await fetch(
+    const res = await discordFetch(
         DISCORD_API_APP_EMOJIS(appId, api),
         {
             method: "POST",
