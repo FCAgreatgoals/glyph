@@ -217,22 +217,22 @@ Synchronizes local emojis with Discord and generates index files.
 - Generates `emojis/list.json` with all emojis if token is provided
 
 **Options:**
-- `--rotate <patterns>`: replace these emojis even if Glyph has no record of their previous image (comma-separated names, `*` wildcard), e.g. `--rotate 'iconLog*,iconSanctions*'`
+- `--rotate <patterns>`: replace these emojis even if git does not show them as changed (comma-separated names, `*` wildcard), e.g. `--rotate 'iconLog*,iconBan'`
 - `--purge`: delete the old versions kept online after a replacement
 
 #### Replacing an emoji
 
-Discord cannot change the image of an existing emoji. When a file changes, `glyph build` renames
+Discord cannot change the image of an existing emoji. When an image changed, `glyph build` renames
 the emoji online to `old_<id>` and uploads the new image under the original name, with a new id.
-The old version stays valid, so messages already sent keep showing it while your bot restarts
-with the new `list.json`. `old_*` emojis are never deleted automatically and never appear in the
-index: run `glyph build --purge` once every instance uses the new ids.
+The old version stays valid, so messages already sent and bot instances not yet restarted keep
+showing it. `old_*` emojis are never deleted automatically and never appear in the index: run
+`glyph build --purge` once every instance uses the new `list.json`.
 
-Glyph knows an image changed through `emojis/glyph.lock.json`, which records, per application, the
-id and the SHA-256 of the file last sent to Discord (Discord re-encodes images, so they cannot be
-compared to what it serves). Keep it out of git like `list.json`: each environment (bot) has its
-own. An emoji with no entry yet (first versioned build, new environment) is recorded as is; use
-`--rotate` to replace it anyway.
+Glyph needs no state to know an image changed: an emoji's id carries its creation date, and git
+gives the date each file last changed on the branch (a merge counts at its own date). A file
+committed after the emoji was created means the online image is outdated. Uncommitted changes are
+reported but not uploaded: commit them first, or use `--rotate`. Without git history (no repository,
+shallow clone), nothing is detected and only `--rotate` replaces emojis.
 
 ## 🎯 Supported Formats
 

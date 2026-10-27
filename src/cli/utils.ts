@@ -27,12 +27,14 @@ import {
     readdir,
     mkdir,
     writeFile,
-    readFile
+    readFile,
+    realpath
 } from "fs/promises";
-import { createHash } from "crypto";
-import { extname, basename, resolve } from "path";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import { extname, basename, dirname, relative, resolve } from "path";
 
-import { EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, LOCK_FILE, RETIRED_NAME_REGEX, TYPES_FILE } from "../constants";
+import { DISCORD_EPOCH, EMOJI_NAME_REGEX, EXTENSIONS, LIST_FILE, RETIRED_NAME_REGEX, TYPES_FILE } from "../constants";
 
 import type { RemoteEmoji, GlyphEntry, GlyphConfig } from "../types";
 
@@ -82,34 +84,69 @@ export function isRetired(name: string): boolean {
 
 /*
  * `--rotate iconLog*,iconBan` : motifs séparés par des virgules, `*` pour n'importe quelle suite. Sert à
- * remplacer des emojis que glyph ne sait pas changés, quand l'état n'existe pas encore.
+ * remplacer des emojis que git ne voit pas changés (dépôt absent ou superficiel).
  */
 export function matchesAny(name: string, patterns: Array<string>): boolean {
     return patterns.some(pattern => new RegExp(`^${pattern.split('*').map(part => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*')}$`).test(name));
 }
 
-export type GlyphLock = {
-    appId: string;
-    emojis: Record<string, { id: string, hash: string }>;
-};
-
-export async function hashFile(path: string): Promise<string> {
-    return createHash("sha256").update(await readFile(path)).digest("hex");
+// Date de création d'un emoji, inscrite dans son id (snowflake).
+export function snowflakeTime(id: string): number {
+    return Number(BigInt(id) >> BigInt(22)) + DISCORD_EPOCH;
 }
 
-// L'état d'une autre application (jeton changé) ne dit rien de celle-ci : on repart de zéro.
-export async function readLock(cfg: GlyphConfig, appId: string): Promise<GlyphLock> {
-    const raw = await readFile(resolve(cfg.emojisDir, LOCK_FILE), "utf8").catch(() => null);
-    const lock = raw ? JSON.parse(raw) as GlyphLock : null;
+const execFileAsync = promisify(execFile);
 
-    return lock?.appId === appId ? lock : { appId, emojis: {} };
+async function git(cwd: string, args: Array<string>): Promise<string> {
+    return (await execFileAsync("git", args, { cwd, maxBuffer: 64 * 1024 * 1024 })).stdout;
 }
 
-export async function writeLock(cfg: GlyphConfig, lock: GlyphLock): Promise<void> {
-    const dir = await safeDirAction(cfg);
-    const emojis = Object.fromEntries(Object.entries(lock.emojis).sort(([a], [b]) => a.localeCompare(b)));
+export type EmojiFileChanges =
+    | { ok: true, changedAt: Map<string, number>, uncommitted: Set<string> }
+    | { ok: false, reason: string };
 
-    await writeFile(resolve(dir, LOCK_FILE), JSON.stringify({ appId: lock.appId, emojis }, null, 2) + "\n", "utf8");
+/*
+ * Dernier changement de chaque fichier du dossier sur la branche, par nom de fichier : date du commit qui
+ * l'y a fait entrer (`--first-parent` : un merge compte à sa date, pas à celle du commit d'origine).
+ * Postérieure à la création de l'emoji, elle dit que l'image en ligne n'est plus la bonne.
+ */
+export async function emojiFileChanges(cfg: GlyphConfig): Promise<EmojiFileChanges> {
+    return readEmojiFileChanges(cfg).catch(err => ({ ok: false, reason: String(err?.stderr || err?.message || err).trim().split("\n").pop()! }));
+}
+
+async function readEmojiFileChanges(cfg: GlyphConfig): Promise<EmojiFileChanges> {
+    const dir = await realpath(resolve(cfg.emojisDir)).catch(() => resolve(cfg.emojisDir));
+
+    let root: string;
+    try {
+        root = (await git(dir, ["rev-parse", "--show-toplevel"])).trim();
+    } catch {
+        return { ok: false, reason: "not a git repository, or git is not installed" };
+    }
+
+    // Un clone superficiel date tous les fichiers de son plus vieux commit : tout paraîtrait changé.
+    if ((await git(root, ["rev-parse", "--is-shallow-repository"])).trim() === "true")
+        return { ok: false, reason: "shallow clone, the file history is incomplete" };
+
+    const pathspec = relative(root, dir) || ".";
+    const inDir = (path: string) => dirname(resolve(root, path)) === dir;
+
+    const changedAt = new Map<string, number>();
+    let date = 0;
+    for (const line of (await git(root, ["log", "-m", "--first-parent", "--format=%x00%ct", "--name-only", "--", pathspec])).split("\n")) {
+        if (line.startsWith("\0")) date = Number(line.slice(1)) * 1000;
+        else if (line && inDir(line) && !changedAt.has(basename(line))) changedAt.set(basename(line), date);
+    }
+
+    const uncommitted = new Set<string>();
+    const status = (await git(root, ["status", "--porcelain", "-z", "--untracked-files=all", "--", pathspec])).split("\0");
+    for (let i = 0; i < status.length; i++) {
+        const path = status[i].slice(3);
+        if (path && inDir(path)) uncommitted.add(basename(path));
+        if (status[i][0] === "R" || status[i][0] === "C") i++;
+    }
+
+    return { ok: true, changedAt, uncommitted };
 }
 
 export async function listLocalEmojiFiles(
