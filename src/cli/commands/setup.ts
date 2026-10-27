@@ -29,7 +29,7 @@ import fs from 'fs'
 import path from 'path'
 
 import { loadConfig } from '../GlyphConfig'
-import { CONFIG_FILE, GITIGNORE_ENTRY, TYPES_FILE } from '../../constants'
+import { CONFIG_FILE, GITIGNORE_ENTRY, LOCK_GITIGNORE_ENTRY, TYPES_FILE } from '../../constants'
 
 export function registerSetupCommand(app: Command) {
     app.command("setup")
@@ -53,16 +53,17 @@ export function registerSetupCommand(app: Command) {
             const gitignorePath = path.join(process.cwd(), '.gitignore')
 
             if (fs.existsSync(gitignorePath)) {
-                const content = fs.readFileSync(gitignorePath, 'utf8')
-                const alreadyIgnored = content
+                const lines = fs.readFileSync(gitignorePath, 'utf8')
                     .split(/\r?\n/)
-                    .some(line => line.trim() === GITIGNORE_ENTRY)
+                    .map(line => line.trim())
+                const missing = [GITIGNORE_ENTRY, LOCK_GITIGNORE_ENTRY].filter(entry => !lines.includes(entry))
 
-                if (!alreadyIgnored) {
-                    fs.appendFileSync(gitignorePath, `\n#glyph\n${GITIGNORE_ENTRY}\n`)
-                    console.log(`📝 Added "${GITIGNORE_ENTRY}" to .gitignore\n`)
+                if (missing.length > 0) {
+                    fs.appendFileSync(gitignorePath, `\n#glyph\n${missing.join('\n')}\n`)
+                    for (const entry of missing) console.log(`📝 Added "${entry}" to .gitignore`)
+                    console.log()
                 } else {
-                    console.log(`📝 "${GITIGNORE_ENTRY}" already in .gitignore\n`)
+                    console.log(`📝 Glyph files already in .gitignore\n`)
                 }
             }
 

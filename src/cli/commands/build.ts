@@ -24,7 +24,6 @@
  */
 
 import { Command } from "commander";
-import { basename } from "path";
 
 import { loadConfig } from "../GlyphConfig";
 import {
@@ -36,10 +35,11 @@ import {
     fileToBase64,
     safeDirAction,
     writeTypesFile,
-    emojiFileChanges,
+    hashFile,
     isRetired,
     matchesAny,
-    snowflakeTime,
+    readLock,
+    writeLock,
 } from "../utils";
 import {
     getBotUser,
@@ -48,7 +48,7 @@ import {
     renameAppEmoji,
     uploadAppEmoji,
 } from "../discord";
-import { DEFAULT_MIME_TYPE, DISCORD_API_BASE_URL, EMOJI_NAME_RULE, EXTENSIONS, RETIRED_PREFIX } from "../../constants";
+import { DEFAULT_MIME_TYPE, DISCORD_API_BASE_URL, EMOJI_NAME_RULE, EXTENSIONS, LOCK_FILE, RETIRED_PREFIX } from "../../constants";
 
 function guessMime(ext: string): string {
     return EXTENSIONS[ext.toLowerCase()] || DEFAULT_MIME_TYPE;
@@ -57,7 +57,7 @@ function guessMime(ext: string): string {
 export function registerBuildCommand(app: Command) {
     app.command("build")
         .description("Synchronize emojis and generate indexes")
-        .option("--rotate <patterns>", "replace these emojis even if git does not show them as changed (comma-separated, * wildcard)")
+        .option("--rotate <patterns>", "replace these emojis even if glyph does not know they changed (comma-separated, * wildcard)")
         .option("--purge", "delete the old versions kept online after a replacement (old_<id>)")
         .action(async (options: { rotate?: string, purge?: boolean }) => {
             const rotate = (options.rotate ?? "").split(",").map(p => p.trim()).filter(Boolean);
@@ -122,25 +122,22 @@ export function registerBuildCommand(app: Command) {
 
                 const { toUpload, toDelete, kept } = diffEmojis(localNames, remoteNames);
 
+                const lock = await readLock(cfg, me.id);
                 const localFiles = await listLocalEmojiFiles(cfg);
                 const filesByName = new Map(localFiles.map(f => [f.name, f]));
-                const remoteByName = new Map(live.map(r => [r.name, r]));
-                const fileOf = (name: string) => basename(filesByName.get(name)!.filePath);
+                const hashes = new Map(await Promise.all(localFiles.map(async f => [f.name, await hashFile(f.filePath)] as const)));
 
-                // Image commitée après la création de l'emoji en ligne : il porte encore l'ancienne.
-                const changes = await emojiFileChanges(cfg);
-                const toRotate = kept.filter(name => matchesAny(name, rotate) || (changes.ok
-                    && (changes.changedAt.get(fileOf(name)) ?? 0) > snowflakeTime(remoteByName.get(name)!.id)));
-
-                if (!changes.ok) {
-                    console.log(`⚠️  Changed images cannot be detected (${changes.reason}): only --rotate replaces emojis.\n`);
-                } else {
-                    const uncommitted = kept.filter(name => !toRotate.includes(name) && changes.uncommitted.has(fileOf(name)));
-                    if (uncommitted.length > 0)
-                        console.log(`⚠️  Not committed, left as they are online: ${uncommitted.join(", ")} (commit them, or use --rotate)\n`);
-                }
+                /*
+                 * Change depuis le dernier envoi (empreinte différente), ou demande avec --rotate. Un emoji
+                 * jamais vu par l'état (premier build versionne) sert de base : on ne sait pas s'il a changé.
+                 */
+                const toRotate = kept.filter(name => {
+                    const known = lock.emojis[name]?.hash;
+                    return matchesAny(name, rotate) || (known !== undefined && known !== hashes.get(name));
+                });
 
                 // DELETE
+                const remoteByName = new Map(live.map(r => [r.name, r]));
                 let deleted = 0, uploaded = 0, rotated = 0, purged = 0, failed = 0;
 
                 for (const name of toDelete) {
@@ -177,7 +174,8 @@ export function registerBuildCommand(app: Command) {
                     }
 
                     try {
-                        await uploadAppEmoji(cfg.botToken, me.id, name, await fileToBase64(f.filePath), guessMime(f.ext), cfg.apiBaseUrl);
+                        const created = await uploadAppEmoji(cfg.botToken, me.id, name, await fileToBase64(f.filePath), guessMime(f.ext), cfg.apiBaseUrl);
+                        lock.emojis[name] = { id: created.id, hash: hashes.get(name)! };
                         retired.push({ id: r.id, name: `${RETIRED_PREFIX}${r.id}` });
                         rotated++;
                         console.log(`    → Replaced ✓ (old version kept as ${RETIRED_PREFIX}${r.id})`);
@@ -200,7 +198,8 @@ export function registerBuildCommand(app: Command) {
                         const b64 = await fileToBase64(f.filePath);
                         const mime = guessMime(f.ext);
 
-                        await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime, cfg.apiBaseUrl);
+                        const created = await uploadAppEmoji(cfg.botToken, me.id, name, b64, mime, cfg.apiBaseUrl);
+                        lock.emojis[name] = { id: created.id, hash: hashes.get(name)! };
                         uploaded++;
 
                         console.log("    → Uploaded ✓");
@@ -225,6 +224,15 @@ export function registerBuildCommand(app: Command) {
                         }
                     }
                 }
+
+                // Base de l'état : un emoji gardé sans empreinte connue prend celle du fichier actuel.
+                for (const name of kept) {
+                    if (!lock.emojis[name] && hashes.has(name)) lock.emojis[name] = { id: remoteByName.get(name)!.id, hash: hashes.get(name)! };
+                }
+                for (const name of Object.keys(lock.emojis)) {
+                    if (!hashes.has(name)) delete lock.emojis[name];
+                }
+                await writeLock(cfg, lock);
 
                 if (uploaded > 0 || deleted > 0 || rotated > 0 || purged > 0) {
                     console.log("\n");
@@ -254,6 +262,7 @@ export function registerBuildCommand(app: Command) {
                 console.log(`   ✗ Failed    : ${failed}`);
                 const waiting = options.purge ? 0 : retired.length;
                 if (waiting > 0) console.log(`   ⏳ Old versions kept online : ${waiting} (glyph build --purge to delete them)`);
+                console.log(`   🔒 State     : ${LOCK_FILE}`);
                 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
                 if (failed > 0) process.exitCode = 1;
